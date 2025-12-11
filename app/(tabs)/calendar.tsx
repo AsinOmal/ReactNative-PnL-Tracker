@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -8,11 +9,13 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../../src/config/fonts';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
-import { fontScale, scale } from '../../src/utils/scaling';
+import { fontScale, scale, screenWidth } from '../../src/utils/scaling';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -20,6 +23,7 @@ export default function CalendarScreen() {
   const { months: monthRecords } = useTrading();
   
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   
   const themeColors = {
@@ -34,8 +38,8 @@ export default function CalendarScreen() {
     primary: '#10B95F',
     profit: '#10B95F',
     loss: '#EF4444',
-    profitAlpha: 'rgba(16, 185, 95, 0.1)',
-    lossAlpha: 'rgba(239, 68, 68, 0.1)',
+    profitLight: 'rgba(16, 185, 95, 0.15)',
+    lossLight: 'rgba(239, 68, 68, 0.15)',
     white: '#FFFFFF',
   };
   
@@ -50,6 +54,20 @@ export default function CalendarScreen() {
     const now = new Date();
     return selectedYear > now.getFullYear() || 
       (selectedYear === now.getFullYear() && monthIndex > now.getMonth());
+  };
+  
+  // Check if it's the current month
+  const isCurrentMonth = (monthIndex: number) => {
+    return selectedYear === currentYear && monthIndex === currentMonth;
+  };
+  
+  // Calculate stats for the year
+  const yearStats = () => {
+    const yearMonths = monthRecords.filter(m => m.month.startsWith(`${selectedYear}-`));
+    const totalPnL = yearMonths.reduce((sum, m) => sum + m.netProfitLoss, 0);
+    const profitMonths = yearMonths.filter(m => m.netProfitLoss > 0).length;
+    const lossMonths = yearMonths.filter(m => m.netProfitLoss < 0).length;
+    return { totalPnL, profitMonths, lossMonths, total: yearMonths.length };
   };
   
   // Calculate profit streak
@@ -70,114 +88,175 @@ export default function CalendarScreen() {
   };
   
   const streak = calculateStreak();
+  const stats = yearStats();
+  
+  // Calculate tile width (3 columns with gaps)
+  const tileWidth = (screenWidth - scale(40) - scale(20)) / 3; // 40 = horizontal padding, 20 = 2 gaps
   
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: scale(120) }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: scale(140) }}>
         {/* Header */}
-        <View style={{ padding: scale(20), paddingTop: scale(12) }}>
-          <Text style={{ fontSize: fontScale(32), fontWeight: '700', color: themeColors.text }}>Calendar</Text>
+        <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(20) }}>
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(32), color: themeColors.text }}>Calendar</Text>
+          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: themeColors.textMuted, marginTop: scale(4) }}>View your monthly performance</Text>
         </View>
         
         {/* Streak Card */}
         {streak > 0 && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: scale(20), marginBottom: scale(24), padding: scale(16), borderRadius: scale(16), backgroundColor: colors.primary, gap: scale(16) }}>
-            <View style={{ width: scale(48), height: scale(48), borderRadius: scale(24), backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ fontSize: fontScale(24) }}>🔥</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: fontScale(14), fontWeight: '500', color: 'rgba(255,255,255,0.8)' }}>Profit Streak</Text>
-              <Text style={{ fontSize: fontScale(24), fontWeight: '700', color: colors.white }}>{streak} months</Text>
-            </View>
+          <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
+            <LinearGradient
+              colors={['#FFB800', '#FF8C00']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flexDirection: 'row', alignItems: 'center', padding: scale(16), borderRadius: scale(16), gap: scale(14) }}
+            >
+              <View style={{ width: scale(48), height: scale(48), borderRadius: scale(24), backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: fontScale(26) }}>🔥</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: 'rgba(255,255,255,0.85)' }}>Profit Streak</Text>
+                <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(22), color: colors.white }}>{streak} months</Text>
+              </View>
+              <Ionicons name="flame" size={scale(28)} color="rgba(255,255,255,0.5)" />
+            </LinearGradient>
           </View>
         )}
         
         {/* Year Selector */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: scale(24), gap: scale(20) }}>
-          <TouchableOpacity 
-            style={{ width: scale(40), height: scale(40), borderRadius: scale(12), backgroundColor: themeColors.card, justifyContent: 'center', alignItems: 'center' }}
-            onPress={() => setSelectedYear(y => y - 1)}
-          >
-            <Ionicons name="chevron-back" size={scale(20)} color={themeColors.text} />
-          </TouchableOpacity>
-          <Text style={{ fontSize: fontScale(24), fontWeight: '700', color: themeColors.text, minWidth: scale(80), textAlign: 'center' }}>{selectedYear}</Text>
-          <TouchableOpacity 
-            style={{ width: scale(40), height: scale(40), borderRadius: scale(12), backgroundColor: themeColors.card, justifyContent: 'center', alignItems: 'center' }}
-            onPress={() => setSelectedYear(y => y + 1)}
-            disabled={selectedYear >= currentYear}
-          >
-            <Ionicons 
-              name="chevron-forward" 
-              size={scale(20)} 
-              color={selectedYear >= currentYear ? themeColors.textMuted : themeColors.text} 
-            />
-          </TouchableOpacity>
+        <View style={{ paddingHorizontal: scale(20), marginBottom: scale(24) }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: themeColors.card, borderRadius: scale(16), padding: scale(6), borderWidth: 1, borderColor: themeColors.border }}>
+            <TouchableOpacity 
+              style={{ width: scale(44), height: scale(44), borderRadius: scale(12), backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}
+              onPress={() => setSelectedYear(y => y - 1)}
+            >
+              <Ionicons name="chevron-back" size={scale(22)} color={themeColors.text} />
+            </TouchableOpacity>
+            
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: themeColors.text }}>{selectedYear}</Text>
+              {stats.total > 0 && (
+                <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: stats.totalPnL >= 0 ? colors.profit : colors.loss }}>
+                  {stats.totalPnL >= 0 ? '+' : ''}{stats.totalPnL.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+                </Text>
+              )}
+            </View>
+            
+            <TouchableOpacity 
+              style={{ width: scale(44), height: scale(44), borderRadius: scale(12), backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center', opacity: selectedYear >= currentYear ? 0.4 : 1 }}
+              onPress={() => setSelectedYear(y => y + 1)}
+              disabled={selectedYear >= currentYear}
+            >
+              <Ionicons name="chevron-forward" size={scale(22)} color={themeColors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
         
         {/* Calendar Grid */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(20), justifyContent: 'center', gap: scale(10) }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(20), gap: scale(10) }}>
           {MONTHS.map((month, index) => {
             const data = getMonthData(index);
             const isFuture = isFutureMonth(index);
+            const isCurrent = isCurrentMonth(index);
             
             let bgColor = themeColors.card;
+            let borderColor = themeColors.border;
             let statusColor = themeColors.textMuted;
             
             if (data) {
-              bgColor = data.netProfitLoss >= 0 ? colors.profitAlpha : colors.lossAlpha;
+              bgColor = data.netProfitLoss >= 0 ? colors.profitLight : colors.lossLight;
+              borderColor = data.netProfitLoss >= 0 ? 'rgba(16, 185, 95, 0.3)' : 'rgba(239, 68, 68, 0.3)';
               statusColor = data.netProfitLoss >= 0 ? colors.profit : colors.loss;
+            }
+            
+            if (isCurrent && !data) {
+              borderColor = colors.primary;
             }
             
             return (
               <TouchableOpacity
                 key={month}
                 style={{
-                  width: scale(100),
-                  height: scale(100),
+                  width: tileWidth,
+                  aspectRatio: 1,
                   borderRadius: scale(16),
                   padding: scale(12),
-                  borderWidth: 1,
-                  borderColor: themeColors.border,
+                  borderWidth: isCurrent ? 2 : 1,
+                  borderColor: borderColor,
                   backgroundColor: bgColor,
                   justifyContent: 'space-between',
-                  opacity: isFuture ? 0.4 : 1,
+                  opacity: isFuture ? 0.35 : 1,
                 }}
                 onPress={() => data && router.push(`/month-details/${data.id}`)}
                 disabled={!data || isFuture}
+                activeOpacity={0.7}
               >
-                <Text style={{ fontSize: fontScale(14), fontWeight: '600', color: isFuture ? themeColors.textMuted : themeColors.text }}>
-                  {month}
-                </Text>
-                {data && (
-                  <>
-                    <Text style={{ fontSize: fontScale(14), fontWeight: '700', color: statusColor }}>
-                      {data.netProfitLoss >= 0 ? '+' : ''}
-                      ${Math.abs(data.netProfitLoss).toLocaleString()}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: isFuture ? themeColors.textMuted : themeColors.text }}>
+                    {month}
+                  </Text>
+                  {isCurrent && !isFuture && (
+                    <View style={{ width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: colors.primary }} />
+                  )}
+                </View>
+                
+                {data ? (
+                  <View>
+                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(15), color: statusColor }} numberOfLines={1}>
+                      {data.netProfitLoss >= 0 ? '+' : ''}${Math.abs(data.netProfitLoss).toLocaleString()}
                     </Text>
-                    <View style={{ width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: statusColor, alignSelf: 'flex-end' }} />
-                  </>
-                )}
-                {!data && !isFuture && (
-                  <Text style={{ fontSize: fontScale(14), color: themeColors.textMuted }}>-</Text>
-                )}
+                    <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(11), color: themeColors.textMuted, marginTop: scale(2) }}>
+                      {data.returnPercentage >= 0 ? '+' : ''}{data.returnPercentage.toFixed(1)}%
+                    </Text>
+                  </View>
+                ) : !isFuture ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(4) }}>
+                    <Ionicons name="remove" size={scale(14)} color={themeColors.textMuted} />
+                    <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted }}>No data</Text>
+                  </View>
+                ) : null}
               </TouchableOpacity>
             );
           })}
         </View>
         
+        {/* Year Summary */}
+        {stats.total > 0 && (
+          <View style={{ paddingHorizontal: scale(20), marginTop: scale(24) }}>
+            <View style={{ backgroundColor: themeColors.card, borderRadius: scale(16), padding: scale(20), borderWidth: 1, borderColor: themeColors.border }}>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text, marginBottom: scale(16) }}>{selectedYear} Summary</Text>
+              
+              <View style={{ flexDirection: 'row', gap: scale(12) }}>
+                <View style={{ flex: 1, backgroundColor: colors.profitLight, borderRadius: scale(12), padding: scale(14), alignItems: 'center' }}>
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(24), color: colors.profit }}>{stats.profitMonths}</Text>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: colors.profit }}>Winning</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: colors.lossLight, borderRadius: scale(12), padding: scale(14), alignItems: 'center' }}>
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(24), color: colors.loss }}>{stats.lossMonths}</Text>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: colors.loss }}>Losing</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: scale(12), padding: scale(14), alignItems: 'center' }}>
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(24), color: themeColors.text }}>{stats.total}</Text>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted }}>Total</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+        
         {/* Legend */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: scale(24), gap: scale(24) }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
-            <View style={{ width: scale(10), height: scale(10), borderRadius: scale(5), backgroundColor: colors.profit }} />
-            <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted }}>Profit</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: scale(24), gap: scale(20), paddingHorizontal: scale(20) }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6) }}>
+            <View style={{ width: scale(12), height: scale(12), borderRadius: scale(6), backgroundColor: colors.profit }} />
+            <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>Profit</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
-            <View style={{ width: scale(10), height: scale(10), borderRadius: scale(5), backgroundColor: colors.loss }} />
-            <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted }}>Loss</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6) }}>
+            <View style={{ width: scale(12), height: scale(12), borderRadius: scale(6), backgroundColor: colors.loss }} />
+            <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>Loss</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
-            <View style={{ width: scale(10), height: scale(10), borderRadius: scale(5), backgroundColor: themeColors.border }} />
-            <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted }}>No Data</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6) }}>
+            <View style={{ width: scale(12), height: scale(12), borderRadius: scale(6), borderWidth: 1, borderColor: themeColors.border }} />
+            <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>No Data</Text>
           </View>
         </View>
       </ScrollView>

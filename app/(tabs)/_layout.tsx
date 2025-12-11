@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { fonts } from '../../src/config/fonts';
 import { useTheme } from '../../src/context/ThemeContext';
 import { fontScale, scale } from '../../src/utils/scaling';
 
@@ -53,7 +54,7 @@ export default function TabLayout() {
             }}
           >
             <Ionicons name="add" size={scale(20)} color="#FFFFFF" />
-            <Text style={{ fontSize: fontScale(14), fontWeight: '600', color: '#FFFFFF' }}>Add</Text>
+            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#FFFFFF' }}>Add new Month</Text>
           </LinearGradient>
         </Pressable>
       </View>
