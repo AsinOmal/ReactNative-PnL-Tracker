@@ -1,14 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { fonts } from '../src/config/fonts';
-import { colors } from '../src/config/theme';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { fontScale, scale } from '../src/utils/scaling';
 
 export default function WelcomeOnboardingScreen() {
   const router = useRouter();
@@ -18,83 +12,37 @@ export default function WelcomeOnboardingScreen() {
   };
   
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-dark-bg">
       {/* Centered Content */}
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="flash" size={60} color={colors.primary} />
+      <View className="flex-1 justify-center items-center" style={{ paddingHorizontal: scale(40) }}>
+        <View 
+          className="bg-profit-light justify-center items-center"
+          style={{ 
+            width: scale(120), 
+            height: scale(120), 
+            borderRadius: scale(30),
+            marginBottom: scale(32),
+          }}
+        >
+          <Ionicons name="flash" size={scale(60)} color="#10B95F" />
         </View>
         
-        <Text style={styles.welcomeText}>Welcome to</Text>
-        <Text style={styles.appName}>TradeX</Text>
-        <Text style={styles.tagline}>Your personal trading journal</Text>
+        <Text style={{ fontSize: fontScale(20), fontWeight: '500', color: 'rgba(255,255,255,0.6)', marginBottom: scale(4) }}>Welcome to</Text>
+        <Text style={{ fontSize: fontScale(48), fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, marginBottom: scale(12) }}>TradeX</Text>
+        <Text style={{ fontSize: fontScale(16), color: 'rgba(255,255,255,0.5)' }}>Your personal trading journal</Text>
       </View>
       
       {/* Bottom Button */}
-      <View style={styles.bottomSection}>
-        <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-          <Text style={styles.continueButtonText}>Get Started</Text>
-          <Ionicons name="arrow-forward" size={20} color={colors.white} />
+      <View style={{ paddingHorizontal: scale(24), paddingBottom: scale(64) }}>
+        <TouchableOpacity 
+          className="flex-row items-center justify-center bg-primary"
+          style={{ paddingVertical: scale(18), paddingHorizontal: scale(32), borderRadius: scale(16), gap: scale(8) }}
+          onPress={handleContinue}
+        >
+          <Text style={{ fontSize: fontScale(18), fontWeight: '700', color: '#FFFFFF' }}>Get Started</Text>
+          <Ionicons name="arrow-forward" size={scale(20)} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.black,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 30,
-    backgroundColor: 'rgba(16, 185, 95, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  welcomeText: {
-    fontFamily: fonts.medium,
-    fontSize: 20,
-    color: 'rgba(255,255,255,0.6)',
-    marginBottom: 4,
-  },
-  appName: {
-    fontFamily: fonts.extraBold,
-    fontSize: 52,
-    color: colors.white,
-    letterSpacing: -1,
-    marginBottom: 12,
-  },
-  tagline: {
-    fontFamily: fonts.regular,
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  bottomSection: {
-    paddingHorizontal: 24,
-    paddingBottom: 60,
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    paddingVertical: 18,
-    borderRadius: 16,
-    gap: 8,
-  },
-  continueButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.white,
-  },
-});

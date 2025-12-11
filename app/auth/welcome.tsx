@@ -1,144 +1,66 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
-import { colors } from '../../src/config/theme';
+import { fontScale, moderateScale, scale } from '../../src/utils/scaling';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+    <SafeAreaView className="flex-1 bg-dark-bg">
+      <View className="flex-1 justify-between" style={{ paddingHorizontal: scale(32), paddingVertical: scale(40) }}>
         {/* Logo Area - Right Aligned */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="trending-up" size={40} color={colors.primary} />
+        <View className="items-end">
+          <View 
+            className="bg-profit-light justify-center items-center"
+            style={{ 
+              width: scale(72), 
+              height: scale(72), 
+              borderRadius: scale(18),
+              marginBottom: scale(12),
+            }}
+          >
+            <Ionicons name="trending-up" size={scale(40)} color="#10B95F" />
           </View>
-          <Text style={styles.brandName}>TradeX</Text>
-          <Text style={styles.tagline}>Track your trading journey</Text>
+          <Text style={{ fontSize: fontScale(24), fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5 }}>TradeX</Text>
+          <Text style={{ fontSize: fontScale(13), color: '#71717A', marginTop: scale(4) }}>Track your trading journey</Text>
         </View>
         
         {/* Hero Text */}
-        <View style={styles.heroSection}>
-          <Text style={styles.heroTitle}>
-            Master{'\n'}Your{'\n'}Trades
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            "The goal of a successful trader is to make the best trades. Money is secondary."
-          </Text>
-          <Text style={styles.heroAuthor}>- Alexander Elder</Text>
+        <View className="flex-1 justify-center items-center">
+          <Text style={{ fontSize: fontScale(30), fontWeight: '700', color: '#FFFFFF', marginBottom: scale(8), textAlign: 'center' }}>Master Your</Text>
+          <Text style={{ fontSize: fontScale(72), fontWeight: '800', color: '#10B95F', lineHeight: fontScale(76), letterSpacing: -2, textAlign: 'center' }}>Trades</Text>
+          
+          {/* Quote Section - with top margin */}
+          <View style={{ marginTop: moderateScale(48) }}>
+            <Text style={{ fontSize: fontScale(15), color: '#71717A', lineHeight: fontScale(22), textAlign: 'center', maxWidth: scale(280) }}>
+              "The goal of a successful trader is to make the best trades. Money is secondary."
+            </Text>
+            <Text style={{ fontSize: fontScale(13), fontWeight: '500', color: '#FFFFFF', marginTop: scale(12), textAlign: 'center' }}>- Alexander Elder</Text>
+          </View>
         </View>
         
         {/* Buttons - Centered */}
-        <View style={styles.buttonSection}>
+        <View style={{ alignItems: 'center', gap: scale(16) }}>
           <TouchableOpacity 
-            style={styles.loginButton}
+            style={{ paddingVertical: scale(12), paddingHorizontal: scale(32) }}
             onPress={() => router.push('/auth/login')}
           >
-            <Text style={styles.loginButtonText}>Login</Text>
+            <Text style={{ fontSize: fontScale(20), fontWeight: '700', color: '#FFFFFF' }}>Login</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.registerButton}
+            className="flex-row items-center bg-primary"
+            style={{ paddingVertical: scale(16), paddingHorizontal: scale(32), borderRadius: scale(16), gap: scale(12) }}
             onPress={() => router.push('/auth/register')}
           >
-            <Text style={styles.registerButtonText}>Register</Text>
-            <Ionicons name="arrow-forward" size={20} color={colors.white} />
+            <Text style={{ fontSize: fontScale(18), fontWeight: '700', color: '#FFFFFF' }}>Register</Text>
+            <Ionicons name="arrow-forward" size={scale(20)} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.black,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 32,
-    justifyContent: 'space-between',
-    paddingVertical: 40,
-  },
-  logoSection: {
-    alignItems: 'flex-end',
-  },
-  logoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 18,
-    backgroundColor: 'rgba(16, 185, 95, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  brandName: {
-    fontFamily: fonts.extraBold,
-    fontSize: 24,
-    color: colors.white,
-    letterSpacing: -0.5,
-  },
-  tagline: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-  heroSection: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  heroTitle: {
-    fontFamily: fonts.extraBold,
-    fontSize: 56,
-    color: colors.primary,
-    lineHeight: 60,
-    letterSpacing: -2,
-    marginBottom: 24,
-  },
-  heroSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 22,
-    maxWidth: 280,
-  },
-  heroAuthor: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: colors.white,
-    marginTop: 12,
-  },
-  buttonSection: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  loginButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-  },
-  loginButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: colors.white,
-  },
-  registerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 16,
-    gap: 12,
-  },
-  registerButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.white,
-  },
-});

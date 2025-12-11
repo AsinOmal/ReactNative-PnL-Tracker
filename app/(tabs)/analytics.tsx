@@ -1,24 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
-import { colors } from '../../src/config/theme';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
-
-const screenWidth = Dimensions.get('window').width;
+import { fontScale, scale, screenWidth } from '../../src/utils/scaling';
 
 export default function AnalyticsScreen() {
   const { isDark } = useTheme();
   const { months, stats } = useTrading();
   
   const themeColors = {
-    bg: isDark ? colors.darkBg : colors.lightBg,
-    card: isDark ? colors.darkCard : colors.lightCard,
-    text: isDark ? colors.textLight : colors.textDark,
-    textMuted: isDark ? colors.textMuted : colors.textMutedLight,
+    bg: isDark ? '#0A0A0A' : '#FAFAFA',
+    card: isDark ? '#1F1F23' : '#FFFFFF',
+    text: isDark ? '#F4F4F5' : '#18181B',
+    textMuted: isDark ? '#71717A' : '#A1A1AA',
+  };
+  
+  const colors = {
+    primary: '#10B95F',
+    profit: '#10B95F',
+    loss: '#EF4444',
   };
   
   const formatCurrency = (value: number) => {
@@ -85,36 +88,32 @@ export default function AnalyticsScreen() {
   const hasChartData = sortedMonths.length >= 2;
   
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bg }]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
       <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: scale(20) }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: themeColors.text }]}>Analytics</Text>
-          <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>
-            Your trading performance
-          </Text>
+        <View style={{ marginTop: scale(20), marginBottom: scale(24) }}>
+          <Text style={{ fontSize: fontScale(28), fontWeight: '700', color: themeColors.text, marginBottom: scale(4) }}>Analytics</Text>
+          <Text style={{ fontSize: fontScale(14), color: themeColors.textMuted }}>Your trading performance</Text>
         </View>
         
         {months.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="bar-chart-outline" size={64} color={themeColors.textMuted} />
-            <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No Data Yet</Text>
-            <Text style={[styles.emptyText, { color: themeColors.textMuted }]}>
-              Add your first month to see analytics
-            </Text>
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: scale(80) }}>
+            <Ionicons name="bar-chart-outline" size={scale(64)} color={themeColors.textMuted} />
+            <Text style={{ fontSize: fontScale(20), fontWeight: '600', color: themeColors.text, marginTop: scale(16), marginBottom: scale(8) }}>No Data Yet</Text>
+            <Text style={{ fontSize: fontScale(14), color: themeColors.textMuted, textAlign: 'center' }}>Add your first month to see analytics</Text>
           </View>
         ) : (
           <>
             {/* P&L Chart */}
             {hasChartData && (
-              <View style={[styles.chartCard, { backgroundColor: themeColors.card }]}>
-                <View style={styles.chartHeader}>
-                  <Text style={[styles.chartTitle, { color: themeColors.text }]}>Cumulative P&L</Text>
-                  <Text style={[styles.chartSubtitle, { color: themeColors.textMuted }]}>Last {sortedMonths.length} months</Text>
+              <View style={{ backgroundColor: themeColors.card, borderRadius: scale(20), padding: scale(16), marginBottom: scale(16) }}>
+                <View style={{ marginBottom: scale(12) }}>
+                  <Text style={{ fontSize: fontScale(16), fontWeight: '600', color: themeColors.text }}>Cumulative P&L</Text>
+                  <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted, marginTop: scale(2) }}>Last {sortedMonths.length} months</Text>
                 </View>
                 <LineChart
                   data={{
@@ -125,8 +124,8 @@ export default function AnalyticsScreen() {
                       strokeWidth: 3,
                     }],
                   }}
-                  width={screenWidth - 72}
-                  height={180}
+                  width={screenWidth - scale(72)}
+                  height={scale(180)}
                   yAxisLabel="$"
                   yAxisSuffix=""
                   chartConfig={{
@@ -147,7 +146,7 @@ export default function AnalyticsScreen() {
                     },
                   }}
                   bezier
-                  style={styles.chart}
+                  style={{ borderRadius: scale(12) }}
                   withInnerLines={true}
                   withOuterLines={false}
                 />
@@ -155,108 +154,80 @@ export default function AnalyticsScreen() {
             )}
             
             {/* Summary Cards */}
-            <View style={styles.summaryGrid}>
-              <View style={[styles.summaryCard, { backgroundColor: themeColors.card }]}>
-                <Text style={[styles.summaryLabel, { color: themeColors.textMuted }]}>Total P&L</Text>
-                <Text style={[styles.summaryValue, { color: stats.totalProfitLoss >= 0 ? colors.profit : colors.loss }]}>
-                  {formatCurrency(stats.totalProfitLoss)}
-                </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: scale(16), rowGap: scale(12) }}>
+              <View style={{ width: '48%', padding: scale(16), borderRadius: scale(16), backgroundColor: themeColors.card }}>
+                <Text style={{ fontSize: fontScale(12), fontWeight: '500', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: scale(8) }}>Total P&L</Text>
+                <Text style={{ fontSize: fontScale(22), fontWeight: '700', color: stats.totalProfitLoss >= 0 ? colors.profit : colors.loss }}>{formatCurrency(stats.totalProfitLoss)}</Text>
               </View>
               
-              <View style={[styles.summaryCard, { backgroundColor: themeColors.card }]}>
-                <Text style={[styles.summaryLabel, { color: themeColors.textMuted }]}>Win Rate</Text>
-                <Text style={[styles.summaryValue, { color: colors.primary }]}>
-                  {stats.winRate.toFixed(1)}%
-                </Text>
+              <View style={{ width: '48%', padding: scale(16), borderRadius: scale(16), backgroundColor: themeColors.card }}>
+                <Text style={{ fontSize: fontScale(12), fontWeight: '500', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: scale(8) }}>Win Rate</Text>
+                <Text style={{ fontSize: fontScale(22), fontWeight: '700', color: colors.primary }}>{stats.winRate.toFixed(1)}%</Text>
               </View>
               
-              <View style={[styles.summaryCard, { backgroundColor: themeColors.card }]}>
-                <Text style={[styles.summaryLabel, { color: themeColors.textMuted }]}>Avg Return</Text>
-                <Text style={[styles.summaryValue, { color: stats.averageReturn >= 0 ? colors.profit : colors.loss }]}>
-                  {formatPercentage(stats.averageReturn)}
-                </Text>
+              <View style={{ width: '48%', padding: scale(16), borderRadius: scale(16), backgroundColor: themeColors.card }}>
+                <Text style={{ fontSize: fontScale(12), fontWeight: '500', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: scale(8) }}>Avg Return</Text>
+                <Text style={{ fontSize: fontScale(22), fontWeight: '700', color: stats.averageReturn >= 0 ? colors.profit : colors.loss }}>{formatPercentage(stats.averageReturn)}</Text>
               </View>
               
-              <View style={[styles.summaryCard, { backgroundColor: themeColors.card }]}>
-                <Text style={[styles.summaryLabel, { color: themeColors.textMuted }]}>Total Months</Text>
-                <Text style={[styles.summaryValue, { color: themeColors.text }]}>
-                  {months.length}
-                </Text>
+              <View style={{ width: '48%', padding: scale(16), borderRadius: scale(16), backgroundColor: themeColors.card }}>
+                <Text style={{ fontSize: fontScale(12), fontWeight: '500', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: scale(8) }}>Total Months</Text>
+                <Text style={{ fontSize: fontScale(22), fontWeight: '700', color: themeColors.text }}>{months.length}</Text>
               </View>
             </View>
             
             {/* Win/Loss Breakdown */}
-            <View style={[styles.breakdownCard, { backgroundColor: themeColors.card }]}>
-              <Text style={[styles.cardTitle, { color: themeColors.text }]}>Win/Loss Breakdown</Text>
+            <View style={{ padding: scale(20), borderRadius: scale(16), backgroundColor: themeColors.card, marginBottom: scale(16) }}>
+              <Text style={{ fontSize: fontScale(16), fontWeight: '600', color: themeColors.text, marginBottom: scale(16) }}>Win/Loss Breakdown</Text>
               
-              <View style={styles.breakdownRow}>
-                <View style={styles.breakdownItem}>
-                  <View style={[styles.indicator, { backgroundColor: colors.profit }]} />
-                  <Text style={[styles.breakdownLabel, { color: themeColors.textMuted }]}>Profitable</Text>
-                  <Text style={[styles.breakdownValue, { color: colors.profit }]}>{profitableMonths}</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: scale(16) }}>
+                <View style={{ alignItems: 'center' }}>
+                  <View style={{ width: scale(12), height: scale(12), borderRadius: scale(6), backgroundColor: colors.profit, marginBottom: scale(8) }} />
+                  <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(4) }}>Profitable</Text>
+                  <Text style={{ fontSize: fontScale(24), fontWeight: '700', color: colors.profit }}>{profitableMonths}</Text>
                 </View>
                 
-                <View style={styles.breakdownItem}>
-                  <View style={[styles.indicator, { backgroundColor: colors.loss }]} />
-                  <Text style={[styles.breakdownLabel, { color: themeColors.textMuted }]}>Losing</Text>
-                  <Text style={[styles.breakdownValue, { color: colors.loss }]}>{losingMonths}</Text>
+                <View style={{ alignItems: 'center' }}>
+                  <View style={{ width: scale(12), height: scale(12), borderRadius: scale(6), backgroundColor: colors.loss, marginBottom: scale(8) }} />
+                  <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(4) }}>Losing</Text>
+                  <Text style={{ fontSize: fontScale(24), fontWeight: '700', color: colors.loss }}>{losingMonths}</Text>
                 </View>
               </View>
               
               {/* Progress Bar */}
-              <View style={styles.progressContainer}>
-                <View 
-                  style={[
-                    styles.progressBar, 
-                    { 
-                      backgroundColor: colors.profit,
-                      flex: profitableMonths || 1,
-                    }
-                  ]} 
-                />
-                <View 
-                  style={[
-                    styles.progressBar, 
-                    { 
-                      backgroundColor: colors.loss,
-                      flex: losingMonths || 1,
-                    }
-                  ]} 
-                />
+              <View style={{ flexDirection: 'row', height: scale(8), borderRadius: scale(4), overflow: 'hidden', gap: 2 }}>
+                <View style={{ height: '100%', borderRadius: scale(4), backgroundColor: colors.profit, flex: profitableMonths || 1 }} />
+                <View style={{ height: '100%', borderRadius: scale(4), backgroundColor: colors.loss, flex: losingMonths || 1 }} />
               </View>
             </View>
             
             {/* Best & Worst Month */}
-            <View style={[styles.extremesCard, { backgroundColor: themeColors.card }]}>
-              <Text style={[styles.cardTitle, { color: themeColors.text }]}>Performance Extremes</Text>
+            <View style={{ padding: scale(20), borderRadius: scale(16), backgroundColor: themeColors.card, marginBottom: scale(16) }}>
+              <Text style={{ fontSize: fontScale(16), fontWeight: '600', color: themeColors.text, marginBottom: scale(16) }}>Performance Extremes</Text>
               
               {bestMonth && (
-                <View style={styles.extremeRow}>
-                  <View style={[styles.extremeIcon, { backgroundColor: 'rgba(16, 185, 95, 0.1)' }]}>
-                    <Ionicons name="trending-up" size={20} color={colors.profit} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: scale(12), borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                  <View style={{ width: scale(40), height: scale(40), borderRadius: scale(12), backgroundColor: 'rgba(16, 185, 95, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: scale(12) }}>
+                    <Ionicons name="trending-up" size={scale(20)} color={colors.profit} />
                   </View>
-                  <View style={styles.extremeInfo}>
-                    <Text style={[styles.extremeLabel, { color: themeColors.textMuted }]}>Best Month</Text>
-                    <Text style={[styles.extremeMonth, { color: themeColors.text }]}>{bestMonth.month}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(2) }}>Best Month</Text>
+                    <Text style={{ fontSize: fontScale(14), fontWeight: '600', color: themeColors.text }}>{bestMonth.month}</Text>
                   </View>
-                  <Text style={[styles.extremeValue, { color: colors.profit }]}>
-                    {formatCurrency(bestMonth.endingCapital - bestMonth.startingCapital)}
-                  </Text>
+                  <Text style={{ fontSize: fontScale(16), fontWeight: '700', color: colors.profit }}>{formatCurrency(bestMonth.endingCapital - bestMonth.startingCapital)}</Text>
                 </View>
               )}
               
               {worstMonth && (
-                <View style={[styles.extremeRow, { borderBottomWidth: 0 }]}>
-                  <View style={[styles.extremeIcon, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-                    <Ionicons name="trending-down" size={20} color={colors.loss} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: scale(12) }}>
+                  <View style={{ width: scale(40), height: scale(40), borderRadius: scale(12), backgroundColor: 'rgba(239, 68, 68, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: scale(12) }}>
+                    <Ionicons name="trending-down" size={scale(20)} color={colors.loss} />
                   </View>
-                  <View style={styles.extremeInfo}>
-                    <Text style={[styles.extremeLabel, { color: themeColors.textMuted }]}>Worst Month</Text>
-                    <Text style={[styles.extremeMonth, { color: themeColors.text }]}>{worstMonth.month}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(2) }}>Worst Month</Text>
+                    <Text style={{ fontSize: fontScale(14), fontWeight: '600', color: themeColors.text }}>{worstMonth.month}</Text>
                   </View>
-                  <Text style={[styles.extremeValue, { color: colors.loss }]}>
-                    {formatCurrency(worstMonth.endingCapital - worstMonth.startingCapital)}
-                  </Text>
+                  <Text style={{ fontSize: fontScale(16), fontWeight: '700', color: colors.loss }}>{formatCurrency(worstMonth.endingCapital - worstMonth.startingCapital)}</Text>
                 </View>
               )}
             </View>
@@ -264,172 +235,8 @@ export default function AnalyticsScreen() {
         )}
         
         {/* Bottom padding for tab bar */}
-        <View style={{ height: 120 }} />
+        <View style={{ height: scale(120) }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 20,
-  },
-  header: {
-    marginTop: 20,
-    marginBottom: 24,
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 28,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-  },
-  emptyTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 20,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  chartCard: {
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-  },
-  chartHeader: {
-    marginBottom: 12,
-  },
-  chartTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-  },
-  chartSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  chart: {
-    borderRadius: 12,
-  },
-  summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    rowGap: 12,
-  },
-  summaryCard: {
-    width: '48%',
-    padding: 16,
-    borderRadius: 16,
-  },
-  summaryLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  summaryValue: {
-    fontFamily: fonts.bold,
-    fontSize: 22,
-  },
-  breakdownCard: {
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  breakdownItem: {
-    alignItems: 'center',
-  },
-  indicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  breakdownLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  breakdownValue: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    gap: 2,
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  extremesCard: {
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 16,
-  },
-  extremeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  extremeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  extremeInfo: {
-    flex: 1,
-  },
-  extremeLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  extremeMonth: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-  },
-  extremeValue: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-  },
-});

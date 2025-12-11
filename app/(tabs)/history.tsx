@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../src/components/EmptyState';
 import { MonthCard } from '../../src/components/MonthCard';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import { sortMonthsDesc } from '../../src/utils/dateUtils';
+import { fontScale, scale } from '../../src/utils/scaling';
 
 export default function HistoryScreen() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function HistoryScreen() {
   
   const sortedMonths = [...months].sort((a, b) => sortMonthsDesc(a.month, b.month));
   
-  const colors = {
+  const themeColors = {
     bg: isDark ? '#0A0A0A' : '#FAFAFA',
     text: isDark ? '#F4F4F5' : '#18181B',
     textMuted: isDark ? '#71717A' : '#A1A1AA',
@@ -23,11 +24,9 @@ export default function HistoryScreen() {
   
   if (months.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>
-            History
-          </Text>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+        <View style={{ paddingHorizontal: scale(20), paddingTop: scale(20), paddingBottom: scale(16) }}>
+          <Text style={{ fontSize: fontScale(28), fontWeight: '700', color: themeColors.text }}>History</Text>
         </View>
         <EmptyState
           title="No History"
@@ -41,12 +40,10 @@ export default function HistoryScreen() {
   }
   
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          History
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+      <View style={{ paddingHorizontal: scale(20), paddingTop: scale(20), paddingBottom: scale(16) }}>
+        <Text style={{ fontSize: fontScale(28), fontWeight: '700', color: themeColors.text }}>History</Text>
+        <Text style={{ fontSize: fontScale(14), color: themeColors.textMuted, marginTop: scale(4) }}>
           {months.length} months recorded
         </Text>
       </View>
@@ -55,42 +52,16 @@ export default function HistoryScreen() {
         data={sortedMonths}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.monthCardWrapper}>
+          <View style={{ marginBottom: scale(12) }}>
             <MonthCard
               month={item}
               onPress={() => router.push(`/month-details/${item.id}`)}
             />
           </View>
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingHorizontal: scale(20), paddingBottom: scale(120) }}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-  },
-  monthCardWrapper: {
-    marginBottom: 12,
-  },
-});

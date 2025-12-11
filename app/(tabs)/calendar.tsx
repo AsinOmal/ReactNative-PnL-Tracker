@@ -3,16 +3,14 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ScrollView,
-    StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
-import { colors } from '../../src/config/theme';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
+import { fontScale, scale } from '../../src/utils/scaling';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -25,11 +23,20 @@ export default function CalendarScreen() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   
   const themeColors = {
-    bg: isDark ? colors.darkBg : colors.lightBg,
-    card: isDark ? colors.darkCard : colors.lightCard,
-    border: isDark ? colors.darkBorder : colors.lightBorder,
-    text: isDark ? colors.textLight : colors.textDark,
-    textMuted: isDark ? colors.textMuted : colors.textMutedLight,
+    bg: isDark ? '#0A0A0A' : '#FAFAFA',
+    card: isDark ? '#1F1F23' : '#FFFFFF',
+    border: isDark ? '#27272A' : '#E4E4E7',
+    text: isDark ? '#F4F4F5' : '#18181B',
+    textMuted: isDark ? '#71717A' : '#A1A1AA',
+  };
+  
+  const colors = {
+    primary: '#10B95F',
+    profit: '#10B95F',
+    loss: '#EF4444',
+    profitAlpha: 'rgba(16, 185, 95, 0.1)',
+    lossAlpha: 'rgba(239, 68, 68, 0.1)',
+    white: '#FFFFFF',
   };
   
   // Get month data for the selected year
@@ -65,50 +72,50 @@ export default function CalendarScreen() {
   const streak = calculateStreak();
   
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bg }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: scale(120) }}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: themeColors.text }]}>Calendar</Text>
+        <View style={{ padding: scale(20), paddingTop: scale(12) }}>
+          <Text style={{ fontSize: fontScale(32), fontWeight: '700', color: themeColors.text }}>Calendar</Text>
         </View>
         
         {/* Streak Card */}
         {streak > 0 && (
-          <View style={[styles.streakCard, { backgroundColor: colors.primary }]}>
-            <View style={styles.streakIcon}>
-              <Text style={styles.streakEmoji}>🔥</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: scale(20), marginBottom: scale(24), padding: scale(16), borderRadius: scale(16), backgroundColor: colors.primary, gap: scale(16) }}>
+            <View style={{ width: scale(48), height: scale(48), borderRadius: scale(24), backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ fontSize: fontScale(24) }}>🔥</Text>
             </View>
-            <View style={styles.streakContent}>
-              <Text style={styles.streakLabel}>Profit Streak</Text>
-              <Text style={styles.streakValue}>{streak} months</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: fontScale(14), fontWeight: '500', color: 'rgba(255,255,255,0.8)' }}>Profit Streak</Text>
+              <Text style={{ fontSize: fontScale(24), fontWeight: '700', color: colors.white }}>{streak} months</Text>
             </View>
           </View>
         )}
         
         {/* Year Selector */}
-        <View style={styles.yearSelector}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: scale(24), gap: scale(20) }}>
           <TouchableOpacity 
-            style={[styles.yearButton, { backgroundColor: themeColors.card }]}
+            style={{ width: scale(40), height: scale(40), borderRadius: scale(12), backgroundColor: themeColors.card, justifyContent: 'center', alignItems: 'center' }}
             onPress={() => setSelectedYear(y => y - 1)}
           >
-            <Ionicons name="chevron-back" size={20} color={themeColors.text} />
+            <Ionicons name="chevron-back" size={scale(20)} color={themeColors.text} />
           </TouchableOpacity>
-          <Text style={[styles.yearText, { color: themeColors.text }]}>{selectedYear}</Text>
+          <Text style={{ fontSize: fontScale(24), fontWeight: '700', color: themeColors.text, minWidth: scale(80), textAlign: 'center' }}>{selectedYear}</Text>
           <TouchableOpacity 
-            style={[styles.yearButton, { backgroundColor: themeColors.card }]}
+            style={{ width: scale(40), height: scale(40), borderRadius: scale(12), backgroundColor: themeColors.card, justifyContent: 'center', alignItems: 'center' }}
             onPress={() => setSelectedYear(y => y + 1)}
             disabled={selectedYear >= currentYear}
           >
             <Ionicons 
               name="chevron-forward" 
-              size={20} 
+              size={scale(20)} 
               color={selectedYear >= currentYear ? themeColors.textMuted : themeColors.text} 
             />
           </TouchableOpacity>
         </View>
         
         {/* Calendar Grid */}
-        <View style={styles.calendarGrid}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(20), justifyContent: 'center', gap: scale(10) }}>
           {MONTHS.map((month, index) => {
             const data = getMonthData(index);
             const isFuture = isFutureMonth(index);
@@ -124,31 +131,34 @@ export default function CalendarScreen() {
             return (
               <TouchableOpacity
                 key={month}
-                style={[
-                  styles.monthCell,
-                  { backgroundColor: bgColor, borderColor: themeColors.border },
-                  isFuture && styles.futureMonth,
-                ]}
+                style={{
+                  width: scale(100),
+                  height: scale(100),
+                  borderRadius: scale(16),
+                  padding: scale(12),
+                  borderWidth: 1,
+                  borderColor: themeColors.border,
+                  backgroundColor: bgColor,
+                  justifyContent: 'space-between',
+                  opacity: isFuture ? 0.4 : 1,
+                }}
                 onPress={() => data && router.push(`/month-details/${data.id}`)}
                 disabled={!data || isFuture}
               >
-                <Text style={[
-                  styles.monthName,
-                  { color: isFuture ? themeColors.textMuted : themeColors.text }
-                ]}>
+                <Text style={{ fontSize: fontScale(14), fontWeight: '600', color: isFuture ? themeColors.textMuted : themeColors.text }}>
                   {month}
                 </Text>
                 {data && (
                   <>
-                    <Text style={[styles.monthPnL, { color: statusColor }]}>
+                    <Text style={{ fontSize: fontScale(14), fontWeight: '700', color: statusColor }}>
                       {data.netProfitLoss >= 0 ? '+' : ''}
                       ${Math.abs(data.netProfitLoss).toLocaleString()}
                     </Text>
-                    <View style={[styles.monthIndicator, { backgroundColor: statusColor }]} />
+                    <View style={{ width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: statusColor, alignSelf: 'flex-end' }} />
                   </>
                 )}
                 {!data && !isFuture && (
-                  <Text style={[styles.noData, { color: themeColors.textMuted }]}>-</Text>
+                  <Text style={{ fontSize: fontScale(14), color: themeColors.textMuted }}>-</Text>
                 )}
               </TouchableOpacity>
             );
@@ -156,144 +166,21 @@ export default function CalendarScreen() {
         </View>
         
         {/* Legend */}
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: colors.profit }]} />
-            <Text style={[styles.legendText, { color: themeColors.textMuted }]}>Profit</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: scale(24), gap: scale(24) }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+            <View style={{ width: scale(10), height: scale(10), borderRadius: scale(5), backgroundColor: colors.profit }} />
+            <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted }}>Profit</Text>
           </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: colors.loss }]} />
-            <Text style={[styles.legendText, { color: themeColors.textMuted }]}>Loss</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+            <View style={{ width: scale(10), height: scale(10), borderRadius: scale(5), backgroundColor: colors.loss }} />
+            <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted }}>Loss</Text>
           </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: themeColors.border }]} />
-            <Text style={[styles.legendText, { color: themeColors.textMuted }]}>No Data</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+            <View style={{ width: scale(10), height: scale(10), borderRadius: scale(5), backgroundColor: themeColors.border }} />
+            <Text style={{ fontSize: fontScale(12), color: themeColors.textMuted }}>No Data</Text>
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    padding: 20,
-    paddingTop: 12,
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 32,
-  },
-  streakCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 16,
-    gap: 16,
-  },
-  streakIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  streakEmoji: {
-    fontSize: 24,
-  },
-  streakContent: {
-    flex: 1,
-  },
-  streakLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  streakValue: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: colors.white,
-  },
-  yearSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-    gap: 20,
-  },
-  yearButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  yearText: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    minWidth: 80,
-    textAlign: 'center',
-  },
-  calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    gap: 10,
-  },
-  monthCell: {
-    width: 100,
-    height: 100,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    justifyContent: 'space-between',
-  },
-  futureMonth: {
-    opacity: 0.4,
-  },
-  monthName: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-  },
-  monthPnL: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-  },
-  monthIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    alignSelf: 'flex-end',
-  },
-  noData: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-  },
-  legend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-    gap: 24,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendText: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-  },
-});

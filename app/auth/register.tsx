@@ -2,21 +2,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
-import { colors } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
+import { fontScale, scale } from '../../src/utils/scaling';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -56,49 +54,74 @@ export default function RegisterScreen() {
   };
   
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.flex1} edges={['top', 'left', 'right']}>
+    <View className="flex-1 bg-primary">
+      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.flex1}
+          className="flex-1"
         >
           <ScrollView 
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={{ flexGrow: 1, paddingHorizontal: scale(24), paddingBottom: scale(40) }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
             {/* Back Button */}
             <TouchableOpacity 
-              style={styles.backButton}
+              style={{ 
+                width: scale(44), 
+                height: scale(44), 
+                borderRadius: scale(12),
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: scale(8),
+                marginBottom: scale(16),
+              }}
               onPress={() => router.back()}
             >
-              <Ionicons name="chevron-back" size={24} color={colors.white} />
+              <Ionicons name="chevron-back" size={scale(24)} color="#FFFFFF" />
             </TouchableOpacity>
             
             {/* Header - Centered */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Sign Up</Text>
-              <Text style={styles.subtitle}>
+            <View style={{ alignItems: 'center', marginBottom: scale(24) }}>
+              <Text style={{ fontSize: fontScale(48), fontWeight: '800', color: '#FFFFFF', textAlign: 'center', marginBottom: scale(8) }}>Sign Up</Text>
+              <Text style={{ fontSize: fontScale(15), color: 'rgba(255,255,255,0.8)', lineHeight: fontScale(22), textAlign: 'center' }}>
                 One Step, One way{'\n'}to financial freedom.
               </Text>
             </View>
             
             {/* Error Message */}
             {error && (
-              <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={18} color={colors.white} />
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: scale(12), borderRadius: scale(12), backgroundColor: 'rgba(239, 68, 68, 0.2)', marginBottom: scale(16), gap: scale(8) }}>
+                <Ionicons name="alert-circle" size={scale(18)} color="#FFFFFF" />
+                <Text style={{ fontSize: fontScale(14), color: '#FFFFFF', flex: 1 }}>{error}</Text>
               </View>
             )}
             
             {/* Form */}
-            <View style={styles.form}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>EMAIL</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.6)" />
+            <View style={{ gap: scale(20), marginBottom: scale(24) }}>
+              <View style={{ gap: scale(8) }}>
+                <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>EMAIL</Text>
+                <View 
+                  style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: 'rgba(255,255,255,0.15)', 
+                    borderRadius: scale(12),
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    paddingHorizontal: scale(16),
+                    height: scale(56),
+                  }}
+                >
+                  <Ionicons name="mail-outline" size={scale(20)} color="rgba(255,255,255,0.6)" style={{ marginRight: scale(12) }} />
                   <TextInput
-                    style={styles.input}
+                    style={{ 
+                      flex: 1, 
+                      fontSize: fontScale(16), 
+                      color: '#FFFFFF',
+                      height: '100%',
+                    }}
                     value={email}
                     onChangeText={setEmail}
                     placeholder="Email"
@@ -110,34 +133,66 @@ export default function RegisterScreen() {
                 </View>
               </View>
               
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>PASSWORD</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.6)" />
+              <View style={{ gap: scale(8) }}>
+                <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>PASSWORD</Text>
+                <View 
+                  style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: 'rgba(255,255,255,0.15)', 
+                    borderRadius: scale(12),
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    paddingHorizontal: scale(16),
+                    height: scale(56),
+                  }}
+                >
+                  <Ionicons name="lock-closed-outline" size={scale(20)} color="rgba(255,255,255,0.6)" style={{ marginRight: scale(12) }} />
                   <TextInput
-                    style={styles.input}
+                    style={{ 
+                      flex: 1, 
+                      fontSize: fontScale(16), 
+                      color: '#FFFFFF',
+                      height: '100%',
+                    }}
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Password"
                     placeholderTextColor="rgba(255,255,255,0.5)"
                     secureTextEntry={!showPassword}
                   />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ marginLeft: scale(12) }}>
                     <Ionicons 
                       name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
-                      size={20} 
+                      size={scale(20)} 
                       color="rgba(255,255,255,0.6)" 
                     />
                   </TouchableOpacity>
                 </View>
               </View>
               
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>CONFIRM PASSWORD</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.6)" />
+              <View style={{ gap: scale(8) }}>
+                <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>CONFIRM PASSWORD</Text>
+                <View 
+                  style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: 'rgba(255,255,255,0.15)', 
+                    borderRadius: scale(12),
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    paddingHorizontal: scale(16),
+                    height: scale(56),
+                  }}
+                >
+                  <Ionicons name="lock-closed-outline" size={scale(20)} color="rgba(255,255,255,0.6)" style={{ marginRight: scale(12) }} />
                   <TextInput
-                    style={styles.input}
+                    style={{ 
+                      flex: 1, 
+                      fontSize: fontScale(16), 
+                      color: '#FFFFFF',
+                      height: '100%',
+                    }}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     placeholder="Confirm Password"
@@ -149,34 +204,52 @@ export default function RegisterScreen() {
               
               {/* Terms Checkbox */}
               <TouchableOpacity 
-                style={styles.checkboxRow}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: scale(12), marginTop: scale(8) }}
                 onPress={() => setAcceptTerms(!acceptTerms)}
               >
-                <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
-                  {acceptTerms && <Ionicons name="checkmark" size={16} color={colors.primary} />}
+                <View 
+                  style={{ 
+                    width: scale(24), 
+                    height: scale(24), 
+                    borderRadius: scale(6),
+                    borderWidth: 2,
+                    borderColor: '#FFFFFF',
+                    backgroundColor: acceptTerms ? '#FFFFFF' : 'transparent',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  {acceptTerms && <Ionicons name="checkmark" size={scale(16)} color="#10B95F" />}
                 </View>
-                <Text style={styles.checkboxText}>Accept Terms and Conditions</Text>
+                <Text style={{ fontSize: fontScale(14), color: '#FFFFFF' }}>Accept Terms and Conditions</Text>
               </TouchableOpacity>
             </View>
             
             {/* Sign Up Button - Filled */}
             <TouchableOpacity 
-              style={[styles.signUpButton, isLoading && styles.buttonDisabled]}
+              style={{ 
+                backgroundColor: '#FFFFFF',
+                paddingVertical: scale(18),
+                borderRadius: scale(16),
+                alignItems: 'center',
+                marginBottom: scale(24),
+                opacity: isLoading ? 0.6 : 1,
+              }}
               onPress={handleRegister}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color={colors.primary} />
+                <ActivityIndicator color="#10B95F" />
               ) : (
-                <Text style={styles.signUpButtonText}>Sign Up</Text>
+                <Text style={{ fontSize: fontScale(18), fontWeight: '700', color: '#10B95F' }}>Sign Up</Text>
               )}
             </TouchableOpacity>
             
             {/* Login Link */}
             <Link href="/auth/login" asChild>
-              <TouchableOpacity style={styles.loginLink}>
-                <Text style={styles.loginText}>Already have an account? </Text>
-                <Text style={styles.loginLinkText}>Login</Text>
+              <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: scale(8), marginTop: 'auto' }}>
+                <Text style={{ fontSize: fontScale(14), color: 'rgba(255,255,255,0.7)' }}>Already have an account? </Text>
+                <Text style={{ fontSize: fontScale(14), fontWeight: '700', color: '#FFFFFF' }}>Login</Text>
               </TouchableOpacity>
             </Link>
           </ScrollView>
@@ -185,147 +258,3 @@ export default function RegisterScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  flex1: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontFamily: fonts.extraBold,
-    fontSize: 48,
-    color: colors.white,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.8)',
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-    marginBottom: 16,
-    gap: 8,
-  },
-  errorText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.white,
-    flex: 1,
-  },
-  form: {
-    gap: 20,
-    marginBottom: 24,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  inputLabel: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 1,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    gap: 12,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 16,
-    color: colors.white,
-    paddingVertical: 16,
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 8,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.white,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.white,
-    borderColor: colors.white,
-  },
-  checkboxText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.white,
-  },
-  signUpButton: {
-    backgroundColor: colors.white,
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  signUpButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.primary,
-  },
-  loginLink: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    marginTop: 'auto',
-  },
-  loginText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  loginLinkText: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    color: colors.white,
-  },
-});

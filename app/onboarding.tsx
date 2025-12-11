@@ -3,18 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-  Dimensions,
   Platform,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
 import Swiper from 'react-native-swiper';
-import { fonts } from '../src/config/fonts';
-
-const { width, height } = Dimensions.get('window');
+import { fontScale, scale } from '../src/utils/scaling';
 
 interface OnboardingSlide {
   id: number;
@@ -88,7 +84,7 @@ export default function OnboardingScreen() {
   };
   
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       <StatusBar barStyle={currentSlide.textColor === '#FFFFFF' ? 'light-content' : 'dark-content'} />
       
       <Swiper
@@ -101,43 +97,60 @@ export default function OnboardingScreen() {
         showsButtons={false}
       >
         {onboarding.map((item) => (
-          <View key={item.id} style={[styles.slide, { backgroundColor: item.bgColor }]}>
+          <View key={item.id} className="flex-1" style={{ backgroundColor: item.bgColor, paddingTop: scale(60) }}>
             {/* Header */}
-            <View style={styles.header}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: scale(24), marginBottom: scale(20) }}>
               <TouchableOpacity onPress={completeOnboarding}>
-                <Text style={[styles.skipText, { color: item.textColor, opacity: 0.7 }]}>Skip</Text>
+                <Text style={{ fontSize: fontScale(16), fontWeight: '500', color: item.textColor, opacity: 0.7 }}>Skip</Text>
               </TouchableOpacity>
             </View>
             
             {/* Visual Area */}
-            <View style={styles.visualArea}>
-              <View style={[styles.iconCircle, { backgroundColor: item.textColor === '#FFFFFF' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]}>
-                <Ionicons name={item.icon} size={100} color={item.textColor} />
+            <View className="flex-1 justify-center items-center" style={{ paddingBottom: scale(40) }}>
+              <View 
+                style={{ 
+                  width: scale(200), 
+                  height: scale(200), 
+                  borderRadius: scale(100), 
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                  backgroundColor: item.textColor === '#FFFFFF' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                }}
+              >
+                <Ionicons name={item.icon} size={scale(100)} color={item.textColor} />
               </View>
             </View>
             
             {/* Content Area */}
-            <View style={styles.contentArea}>
-              <Text style={[styles.title, { color: item.textColor }]}>{item.title}</Text>
-              <Text style={[styles.subtitle, { color: item.textColor, opacity: 0.7 }]}>{item.subtitle}</Text>
-              <Text style={[styles.description, { color: item.textColor, opacity: 0.6 }]}>{item.description}</Text>
+            <View style={{ paddingHorizontal: scale(32), paddingBottom: scale(140) }}>
+              <Text style={{ fontSize: fontScale(42), fontWeight: '800', lineHeight: fontScale(48), letterSpacing: -0.5, color: item.textColor, marginBottom: scale(8) }}>
+                {item.title}
+              </Text>
+              <Text style={{ fontSize: fontScale(16), fontWeight: '500', color: item.textColor, opacity: 0.7, marginBottom: scale(12) }}>
+                {item.subtitle}
+              </Text>
+              <Text style={{ fontSize: fontScale(15), lineHeight: fontScale(22), color: item.textColor, opacity: 0.6, maxWidth: scale(280) }}>
+                {item.description}
+              </Text>
             </View>
           </View>
         ))}
       </Swiper>
       
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      <View style={{ position: 'absolute', bottom: scale(50), left: scale(32), right: scale(32), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         {/* Dots & Label */}
-        <View style={styles.dotsContainer}>
-          <View style={styles.dotsRow}>
+        <View>
+          <View style={{ flexDirection: 'row', gap: scale(8) }}>
             {onboarding.map((_, index) => (
               <View 
                 key={index} 
-                style={[
-                  styles.dot,
-                  index === activeIndex ? styles.dotActive : styles.dotInactive
-                ]}
+                style={{ 
+                  width: scale(8), 
+                  height: scale(8), 
+                  borderRadius: scale(4), 
+                  backgroundColor: index === activeIndex ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
+                }}
               />
             ))}
           </View>
@@ -145,15 +158,24 @@ export default function OnboardingScreen() {
         
         {/* Next Button */}
         <TouchableOpacity 
-          style={[
-            styles.nextButton,
-            { backgroundColor: currentSlide.textColor === '#FFFFFF' ? '#FFFFFF' : '#1E1E1E' }
-          ]} 
+          style={{ 
+            width: scale(56), 
+            height: scale(56), 
+            borderRadius: scale(16), 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            backgroundColor: currentSlide.textColor === '#FFFFFF' ? '#FFFFFF' : '#1E1E1E',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
           onPress={handleNext}
         >
           <Ionicons 
             name={isLastSlide ? 'checkmark' : 'chevron-forward'} 
-            size={24} 
+            size={scale(24)} 
             color={currentSlide.textColor === '#FFFFFF' ? currentSlide.bgColor : '#FFFFFF'}
           />
         </TouchableOpacity>
@@ -161,111 +183,3 @@ export default function OnboardingScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  slide: {
-    flex: 1,
-    paddingTop: 60,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  logoContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  logoImage: {
-    width: 28,
-    height: 28,
-  },
-  skipText: {
-    fontFamily: fonts.medium,
-    fontSize: 16,
-  },
-  visualArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 40,
-  },
-  iconCircle: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contentArea: {
-    paddingHorizontal: 32,
-    paddingBottom: 140,
-  },
-  title: {
-    fontFamily: fonts.extraBold,
-    fontSize: 42,
-    lineHeight: 48,
-    letterSpacing: -1,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: fonts.medium,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  description: {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    lineHeight: 22,
-    maxWidth: 280,
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 50,
-    left: 32,
-    right: 32,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dotsContainer: {
-    flexDirection: 'column',
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  dotActive: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-  },
-  dotInactive: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  nextButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-});

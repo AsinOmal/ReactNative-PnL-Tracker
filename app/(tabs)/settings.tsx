@@ -3,15 +3,12 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
-import { colors } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
@@ -23,6 +20,7 @@ import {
   setBiometricEnabled,
 } from '../../src/services/biometricService';
 import { generateAndShareCSV } from '../../src/services/csvService';
+import { fontScale, scale } from '../../src/utils/scaling';
 
 export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
@@ -71,35 +69,35 @@ export default function SettingsScreen() {
   };
   
   const themeColors = {
-    bg: isDark ? colors.darkBg : colors.lightBg,
-    card: isDark ? colors.darkCard : colors.lightCard,
-    border: isDark ? colors.darkBorder : colors.lightBorder,
-    text: isDark ? colors.textLight : colors.textDark,
-    textMuted: isDark ? colors.textMuted : colors.textMutedLight,
+    bg: isDark ? '#0A0A0A' : '#FAFAFA',
+    card: isDark ? '#1F1F23' : '#FFFFFF',
+    border: isDark ? '#27272A' : '#E4E4E7',
+    text: isDark ? '#F4F4F5' : '#18181B',
+    textMuted: isDark ? '#71717A' : '#A1A1AA',
   };
   
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bg }]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: themeColors.text }]}>Settings</Text>
-          <Text style={[styles.versionText, { color: themeColors.textMuted }]}>v1.0.0</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: scale(20), paddingTop: scale(12) }}>
+          <Text style={{ fontSize: fontScale(32), fontWeight: '700', color: themeColors.text }}>Settings</Text>
+          <Text style={{ fontSize: fontScale(11), color: themeColors.textMuted, opacity: 0.5 }}>v1.0.0</Text>
         </View>
         
         {/* Profile Section */}
-        <View style={[styles.section, { backgroundColor: themeColors.card }]}>
-          <View style={styles.profileRow}>
-            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-              <Text style={styles.avatarText}>
+        <View style={{ marginHorizontal: scale(20), borderRadius: scale(16), backgroundColor: themeColors.card, overflow: 'hidden' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', padding: scale(16), gap: scale(16) }}>
+            <View style={{ width: scale(56), height: scale(56), borderRadius: scale(28), backgroundColor: '#10B95F', justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ fontSize: fontScale(24), fontWeight: '700', color: '#FFFFFF' }}>
                 {user?.email?.[0].toUpperCase() || 'T'}
               </Text>
             </View>
-            <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: themeColors.text }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: fontScale(18), fontWeight: '600', color: themeColors.text }}>
                 {user?.email?.split('@')[0] || 'TradeX User'}
               </Text>
-              <Text style={[styles.profileEmail, { color: themeColors.textMuted }]}>
+              <Text style={{ fontSize: fontScale(14), color: themeColors.textMuted, marginTop: scale(2) }}>
                 {user?.email || 'Not signed in'}
               </Text>
             </View>
@@ -107,49 +105,49 @@ export default function SettingsScreen() {
         </View>
         
         {/* Appearance */}
-        <Text style={[styles.sectionTitle, { color: themeColors.textMuted }]}>Appearance</Text>
-        <View style={[styles.section, { backgroundColor: themeColors.card }]}>
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <Ionicons name={isDark ? 'moon' : 'sunny'} size={22} color={colors.primary} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Dark Mode</Text>
+        <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginHorizontal: scale(20), marginTop: scale(24), marginBottom: scale(8) }}>Appearance</Text>
+        <View style={{ marginHorizontal: scale(20), borderRadius: scale(16), backgroundColor: themeColors.card, overflow: 'hidden' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: scale(16) }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(14) }}>
+              <Ionicons name={isDark ? 'moon' : 'sunny'} size={scale(22)} color="#10B95F" />
+              <Text style={{ fontSize: fontScale(16), fontWeight: '500', color: themeColors.text }}>Dark Mode</Text>
             </View>
             <Switch
               value={isDark}
               onValueChange={toggleTheme}
-              trackColor={{ false: themeColors.border, true: colors.primary }}
-              thumbColor={colors.white}
+              trackColor={{ false: themeColors.border, true: '#10B95F' }}
+              thumbColor="#FFFFFF"
             />
           </View>
         </View>
         
         {/* Security */}
-        <Text style={[styles.sectionTitle, { color: themeColors.textMuted }]}>Security</Text>
-        <View style={[styles.section, { backgroundColor: themeColors.card }]}>
+        <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginHorizontal: scale(20), marginTop: scale(24), marginBottom: scale(8) }}>Security</Text>
+        <View style={{ marginHorizontal: scale(20), borderRadius: scale(16), backgroundColor: themeColors.card, overflow: 'hidden' }}>
           {biometric?.isAvailable && biometric.isEnrolled ? (
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: scale(16) }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(14) }}>
                 <Ionicons 
                   name={biometric.biometricType === 'faceid' ? 'scan' : 'finger-print'} 
-                  size={22} 
-                  color={colors.primary} 
+                  size={scale(22)} 
+                  color="#10B95F" 
                 />
-                <Text style={[styles.settingLabel, { color: themeColors.text }]}>
+                <Text style={{ fontSize: fontScale(16), fontWeight: '500', color: themeColors.text }}>
                   {getBiometricName(biometric.biometricType)}
                 </Text>
               </View>
               <Switch
                 value={biometricOn}
                 onValueChange={handleBiometricToggle}
-                trackColor={{ false: themeColors.border, true: colors.primary }}
-                thumbColor={colors.white}
+                trackColor={{ false: themeColors.border, true: '#10B95F' }}
+                thumbColor="#FFFFFF"
               />
             </View>
           ) : (
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <Ionicons name="lock-closed" size={22} color={themeColors.textMuted} />
-                <Text style={[styles.settingLabel, { color: themeColors.textMuted }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: scale(16) }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(14) }}>
+                <Ionicons name="lock-closed" size={scale(22)} color={themeColors.textMuted} />
+                <Text style={{ fontSize: fontScale(16), fontWeight: '500', color: themeColors.textMuted }}>
                   Biometrics not available
                 </Text>
               </View>
@@ -158,125 +156,31 @@ export default function SettingsScreen() {
         </View>
         
         {/* Data */}
-        <Text style={[styles.sectionTitle, { color: themeColors.textMuted }]}>Data</Text>
-        <View style={[styles.section, { backgroundColor: themeColors.card }]}>
-          <TouchableOpacity style={styles.settingRow} onPress={handleExportCSV}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="download-outline" size={22} color={colors.primary} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Export to CSV</Text>
+        <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginHorizontal: scale(20), marginTop: scale(24), marginBottom: scale(8) }}>Data</Text>
+        <View style={{ marginHorizontal: scale(20), borderRadius: scale(16), backgroundColor: themeColors.card, overflow: 'hidden' }}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: scale(16) }} onPress={handleExportCSV}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(14) }}>
+              <Ionicons name="download-outline" size={scale(22)} color="#10B95F" />
+              <Text style={{ fontSize: fontScale(16), fontWeight: '500', color: themeColors.text }}>Export to CSV</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={themeColors.textMuted} />
+            <Ionicons name="chevron-forward" size={scale(20)} color={themeColors.textMuted} />
           </TouchableOpacity>
         </View>
         
         {/* Account */}
-        <Text style={[styles.sectionTitle, { color: themeColors.textMuted }]}>Account</Text>
-        <View style={[styles.section, { backgroundColor: themeColors.card }]}>
-          <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="log-out-outline" size={22} color={colors.loss} />
-              <Text style={[styles.settingLabel, { color: colors.loss }]}>Sign Out</Text>
+        <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginHorizontal: scale(20), marginTop: scale(24), marginBottom: scale(8) }}>Account</Text>
+        <View style={{ marginHorizontal: scale(20), borderRadius: scale(16), backgroundColor: themeColors.card, overflow: 'hidden' }}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: scale(16) }} onPress={handleLogout}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(14) }}>
+              <Ionicons name="log-out-outline" size={scale(22)} color="#EF4444" />
+              <Text style={{ fontSize: fontScale(16), fontWeight: '500', color: '#EF4444' }}>Sign Out</Text>
             </View>
           </TouchableOpacity>
         </View>
         
         {/* Bottom padding for tab bar */}
-        <View style={{ height: 120 }} />
+        <View style={{ height: scale(120) }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 12,
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 32,
-  },
-  versionText: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    opacity: 0.5,
-  },
-  sectionTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  section: {
-    marginHorizontal: 20,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 16,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: colors.white,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontFamily: fonts.semiBold,
-    fontSize: 18,
-  },
-  profileEmail: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    marginTop: 2,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  settingLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 16,
-  },
-  appInfo: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  appName: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-  },
-  appVersion: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    marginTop: 4,
-  },
-});

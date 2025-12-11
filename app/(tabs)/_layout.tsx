@@ -1,11 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
-import { colors } from '../../src/config/theme';
 import { useTheme } from '../../src/context/ThemeContext';
+import { fontScale, scale } from '../../src/utils/scaling';
 
 export default function TabLayout() {
   const { isDark } = useTheme();
@@ -15,25 +14,46 @@ export default function TabLayout() {
   const themeColors = {
     bg: isDark ? 'rgba(24, 24, 27, 0.98)' : 'rgba(255, 255, 255, 0.98)',
     border: isDark ? 'rgba(39, 39, 42, 0.8)' : 'rgba(228, 228, 231, 0.8)',
-    active: colors.primary,
+    active: '#10B95F',
     inactive: isDark ? '#71717A' : '#A1A1AA',
   };
   
-  const bottomMargin = Math.max(insets.bottom, 20);
+  const bottomMargin = Math.max(insets.bottom, scale(20));
   
   return (
-    <View style={styles.wrapper}>
+    <View className="flex-1">
       {/* Floating Add Button - Above Tab Bar */}
-      <View style={[styles.addButtonContainer, { bottom: bottomMargin + 70 }]}>
+      <View 
+        style={{ 
+          position: 'absolute', 
+          left: 0, 
+          right: 0, 
+          alignItems: 'center', 
+          zIndex: 100,
+          bottom: bottomMargin + scale(70),
+        }}
+      >
         <Pressable onPress={() => router.push('/add-month')}>
           <LinearGradient
             colors={['#10B95F', '#059669']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.addButton}
+            style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              paddingHorizontal: scale(20), 
+              paddingVertical: scale(13), 
+              borderRadius: scale(25), 
+              gap: scale(6),
+              shadowColor: '#10B95F',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.4,
+              shadowRadius: 12,
+              elevation: 10,
+            }}
           >
-            <Ionicons name="add" size={20} color={colors.white} />
-            <Text style={styles.addButtonText}>Add</Text>
+            <Ionicons name="add" size={scale(20)} color="#FFFFFF" />
+            <Text style={{ fontSize: fontScale(14), fontWeight: '600', color: '#FFFFFF' }}>Add</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -46,10 +66,10 @@ export default function TabLayout() {
           tabBarShowLabel: true,
           tabBarStyle: {
             backgroundColor: themeColors.bg,
-            borderRadius: 40,
-            marginHorizontal: 24,
+            borderRadius: scale(40),
+            marginHorizontal: scale(24),
             marginBottom: bottomMargin,
-            height: 60,
+            height: scale(60),
             position: 'absolute',
             borderTopWidth: 0,
             shadowColor: '#000',
@@ -59,8 +79,8 @@ export default function TabLayout() {
             elevation: 15,
           },
           tabBarLabelStyle: {
-            fontFamily: fonts.medium,
-            fontSize: 10,
+            fontWeight: '500',
+            fontSize: fontScale(10),
             marginTop: -2,
           },
           tabBarIconStyle: {
@@ -73,7 +93,7 @@ export default function TabLayout() {
           options={{
             title: 'Home',
             tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+              <Ionicons name={focused ? "home" : "home-outline"} size={scale(22)} color={color} />
             ),
           }}
         />
@@ -82,7 +102,7 @@ export default function TabLayout() {
           options={{
             title: 'Calendar',
             tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? "calendar" : "calendar-outline"} size={22} color={color} />
+              <Ionicons name={focused ? "calendar" : "calendar-outline"} size={scale(22)} color={color} />
             ),
           }}
         />
@@ -91,7 +111,7 @@ export default function TabLayout() {
           options={{
             title: 'Analytics',
             tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? "bar-chart" : "bar-chart-outline"} size={22} color={color} />
+              <Ionicons name={focused ? "bar-chart" : "bar-chart-outline"} size={scale(22)} color={color} />
             ),
           }}
         />
@@ -100,7 +120,7 @@ export default function TabLayout() {
           options={{
             title: 'History',
             tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? "time" : "time-outline"} size={22} color={color} />
+              <Ionicons name={focused ? "time" : "time-outline"} size={scale(22)} color={color} />
             ),
           }}
         />
@@ -109,7 +129,7 @@ export default function TabLayout() {
           options={{
             title: 'Settings',
             tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? "settings" : "settings-outline"} size={22} color={color} />
+              <Ionicons name={focused ? "settings" : "settings-outline"} size={scale(22)} color={color} />
             ),
           }}
         />
@@ -117,34 +137,3 @@ export default function TabLayout() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
-  addButtonContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 13,
-    borderRadius: 25,
-    gap: 6,
-    shadowColor: '#10B95F',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  addButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: colors.white,
-  },
-});

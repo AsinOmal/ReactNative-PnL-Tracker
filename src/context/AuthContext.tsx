@@ -26,11 +26,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Subscribe to auth state changes
     const unsubscribe = onAuthStateChanged((authUser) => {
+      console.log('Auth state changed:', authUser ? authUser.email : 'null');
       setUser(authUser);
       setIsLoading(false);
     });
@@ -39,33 +41,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
+    setIsAuthenticating(true);
     setError(null);
     try {
-      await signInWithEmail(email, password);
+      const result = await signInWithEmail(email, password);
+      console.log('Login successful:', result.email);
+      // Don't set user here - onAuthStateChanged will handle it
     } catch (err: any) {
+      console.log('Login failed:', err.code);
       setError(getAuthErrorMessage(err.code));
       throw err;
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
   const register = async (email: string, password: string) => {
-    setIsLoading(true);
+    setIsAuthenticating(true);
     setError(null);
     try {
-      await signUpWithEmail(email, password);
+      const result = await signUpWithEmail(email, password);
+      console.log('Registration successful:', result.email);
+      // Don't set user here - onAuthStateChanged will handle it
     } catch (err: any) {
+      console.log('Registration failed:', err.code);
       setError(getAuthErrorMessage(err.code));
       throw err;
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
   const loginWithGoogle = async () => {
-    setIsLoading(true);
+    setIsAuthenticating(true);
     setError(null);
     try {
       await authSignInWithGoogle();
@@ -73,19 +81,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(getAuthErrorMessage(err.code));
       throw err;
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
   const logout = async () => {
-    setIsLoading(true);
     setError(null);
     try {
+      console.log('Logging out...');
       await authSignOut();
+      console.log('Logout successful');
+      // Don't set user to null here - onAuthStateChanged will handle it
     } catch (err: any) {
+      console.log('Logout failed:', err.message);
       setError(err.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -93,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextType = {
     user,
-    isLoading,
+    isLoading, // Only initial auth check, not login/register attempts
     isAuthenticated: !!user,
     error,
     login,

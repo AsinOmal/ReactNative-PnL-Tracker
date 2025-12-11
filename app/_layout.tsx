@@ -1,12 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import 'react-native-reanimated';
-import "../global.css";
 import { fontAssets, fonts } from '../src/config/fonts';
 import { colors } from '../src/config/theme';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
@@ -20,11 +19,12 @@ const ONBOARDING_KEY = '@tradex_onboarding_complete';
 
 function AuthenticatedLayout() {
   const { isDark } = useTheme();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
-  const navigationDone = useRef(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const previousAuthState = useRef<boolean | null>(null);
   
   // Check onboarding status once on mount
   useEffect(() => {
@@ -39,43 +39,62 @@ function AuthenticatedLayout() {
     checkOnboarding();
   }, []);
   
-  // Handle navigation - only run once per navigation goal
+  // Handle initial navigation (only runs once after initial auth check)
   useEffect(() => {
-    // Wait for all data to load
-    if (authLoading || isOnboardingComplete === null) return;
+    if (authLoading || isOnboardingComplete === null || initialCheckDone) return;
+    
+    setInitialCheckDone(true);
+    previousAuthState.current = isAuthenticated;
     
     const inAuthGroup = segments[0] === 'auth';
     const inOnboarding = segments[0] === 'onboarding' || segments[0] === 'welcome-onboarding';
-    const inTabs = segments[0] === '(tabs)';
     
-    // Onboarding not complete - show welcome-onboarding (only once)
-    if (!isOnboardingComplete && !inOnboarding) {
-      if (!navigationDone.current) {
-        navigationDone.current = true;
-        router.replace('/welcome-onboarding');
-      }
+    console.log('Initial navigation check:', { isAuthenticated, isOnboardingComplete, segment: segments[0] });
+    
+    // Onboarding not complete
+    if (!isOnboardingComplete) {
+      router.replace('/welcome-onboarding');
       return;
     }
     
-    // Reset navigation flag when onboarding completes
-    if (isOnboardingComplete && navigationDone.current && !inAuthGroup && !inTabs) {
-      navigationDone.current = false;
-    }
-    
     // User is authenticated - go to home
-    if (isAuthenticated && (inAuthGroup || inOnboarding)) {
+    if (isAuthenticated) {
       router.replace('/(tabs)');
       return;
     }
     
-    // User is not authenticated and not on auth screen - go to welcome
-    if (isOnboardingComplete && !isAuthenticated && !inAuthGroup && !inOnboarding) {
+    // User is not authenticated - go to auth welcome
+    if (!inAuthGroup && !inOnboarding) {
       router.replace('/auth/welcome');
+    }
+  }, [authLoading, isOnboardingComplete, initialCheckDone]);
+  
+  // Handle auth state changes AFTER initial check (login/logout)
+  useEffect(() => {
+    // Skip if initial check not done or still loading
+    if (!initialCheckDone || authLoading) return;
+    
+    // Skip if auth state hasn't actually changed
+    if (previousAuthState.current === isAuthenticated) return;
+    
+    console.log('Auth state changed from', previousAuthState.current, 'to', isAuthenticated);
+    previousAuthState.current = isAuthenticated;
+    
+    // User just logged in
+    if (isAuthenticated) {
+      console.log('User logged in, navigating to tabs');
+      router.replace('/(tabs)');
       return;
     }
-  }, [isAuthenticated, authLoading, isOnboardingComplete, segments]);
+    
+    // User just logged out
+    if (!isAuthenticated && previousAuthState.current === true) {
+      console.log('User logged out, navigating to auth/welcome');
+      router.replace('/auth/welcome');
+    }
+  }, [isAuthenticated, initialCheckDone, authLoading]);
   
-  // Show loading screen
+  // Show loading screen during initial load
   if (authLoading || isOnboardingComplete === null) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.black }]}>
@@ -89,7 +108,23 @@ function AuthenticatedLayout() {
   
   return (
     <View style={[styles.container, { backgroundColor: isDark ? colors.darkBg : colors.lightBg }]}>
-      <Slot />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+          animationDuration: 250,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+        <Stack.Screen name="auth" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="welcome-onboarding" options={{ animation: 'fade' }} />
+        <Stack.Screen name="onboarding" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="add-month" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
+        <Stack.Screen name="month-details/[id]" options={{ animation: 'slide_from_right' }} />
+      </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </View>
   );

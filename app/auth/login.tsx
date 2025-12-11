@@ -2,20 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
-import { colors } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
+import { fontScale, scale } from '../../src/utils/scaling';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,12 +23,25 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
+  // Debug: Log when error state changes
+  React.useEffect(() => {
+    console.log('Login screen error state:', error);
+  }, [error]);
+  
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) return;
+    if (!email.trim() || !password.trim()) {
+      console.log('Login: Empty email or password');
+      return;
+    }
+    console.log('Login: Attempting login for', email.trim());
     try {
       clearError();
       await login(email.trim(), password);
-    } catch (err) {}
+      console.log('Login: Success, should navigate to tabs');
+    } catch (err: any) {
+      console.log('Login: Failed with error', err?.code || err?.message);
+      // Error is handled by AuthContext, stay on this screen
+    }
   };
   
   const handleGoogleLogin = async () => {
@@ -41,65 +52,104 @@ export default function LoginScreen() {
   };
   
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex1}
+        className="flex-1"
       >
         <ScrollView 
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: scale(24), paddingBottom: scale(40) }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Back Button */}
           <TouchableOpacity 
-            style={styles.backButton}
+            style={{ 
+              width: scale(44), 
+              height: scale(44), 
+              borderRadius: scale(12),
+              backgroundColor: '#F4F4F5',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: scale(8),
+              marginBottom: scale(16),
+            }}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={24} color={colors.textDark} />
+            <Ionicons name="chevron-back" size={scale(24)} color="#18181B" />
           </TouchableOpacity>
           
           {/* Header - Centered */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Login</Text>
-            <Text style={styles.subtitle}>
+          <View style={{ alignItems: 'center', marginBottom: scale(24) }}>
+            <Text style={{ fontSize: fontScale(48), fontWeight: '800', color: '#10B95F', textAlign: 'center', marginBottom: scale(8) }}>Login</Text>
+            <Text style={{ fontSize: fontScale(15), color: '#71717A', lineHeight: fontScale(22), textAlign: 'center' }}>
               Happy to see you again.{'\n'}Let's track profits.
             </Text>
           </View>
           
           {/* Social Login */}
-          <View style={styles.socialRow}>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: scale(16), marginBottom: scale(24) }}>
             <TouchableOpacity 
-              style={styles.socialButton}
+              style={{ 
+                width: scale(52), 
+                height: scale(52), 
+                borderRadius: scale(14),
+                backgroundColor: '#F4F4F5',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
               onPress={handleGoogleLogin}
             >
-              <Ionicons name="logo-google" size={22} color={colors.textDark} />
+              <Ionicons name="logo-google" size={scale(22)} color="#18181B" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-apple" size={22} color={colors.textDark} />
+            <TouchableOpacity 
+              style={{ 
+                width: scale(52), 
+                height: scale(52), 
+                borderRadius: scale(14),
+                backgroundColor: '#F4F4F5',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Ionicons name="logo-apple" size={scale(22)} color="#18181B" />
             </TouchableOpacity>
           </View>
           
           {/* Error Message */}
           {error && (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={18} color={colors.loss} />
-              <Text style={styles.errorText}>{error}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: scale(12), borderRadius: scale(12), backgroundColor: 'rgba(239, 68, 68, 0.1)', marginBottom: scale(16), gap: scale(8) }}>
+              <Ionicons name="alert-circle" size={scale(18)} color="#EF4444" />
+              <Text style={{ fontSize: fontScale(14), color: '#EF4444', flex: 1 }}>{error}</Text>
             </View>
           )}
           
           {/* Form */}
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>EMAIL</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={20} color={colors.textMuted} />
+          <View style={{ gap: scale(20), marginBottom: scale(24) }}>
+            <View style={{ gap: scale(8) }}>
+              <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: '#71717A', letterSpacing: 1 }}>EMAIL</Text>
+              <View 
+                style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  backgroundColor: '#F4F4F5', 
+                  borderRadius: scale(12),
+                  paddingHorizontal: scale(16),
+                  height: scale(56),
+                }}
+              >
+                <Ionicons name="mail-outline" size={scale(20)} color="#71717A" style={{ marginRight: scale(12) }} />
                 <TextInput
-                  style={styles.input}
+                  style={{ 
+                    flex: 1, 
+                    fontSize: fontScale(16), 
+                    color: '#18181B',
+                    height: '100%',
+                  }}
                   value={email}
                   onChangeText={setEmail}
                   placeholder="Email"
-                  placeholderTextColor={colors.textMutedLight}
+                  placeholderTextColor="#A1A1AA"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -107,23 +157,37 @@ export default function LoginScreen() {
               </View>
             </View>
             
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>PASSWORD</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} />
+            <View style={{ gap: scale(8) }}>
+              <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: '#71717A', letterSpacing: 1 }}>PASSWORD</Text>
+              <View 
+                style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  backgroundColor: '#F4F4F5', 
+                  borderRadius: scale(12),
+                  paddingHorizontal: scale(16),
+                  height: scale(56),
+                }}
+              >
+                <Ionicons name="lock-closed-outline" size={scale(20)} color="#71717A" style={{ marginRight: scale(12) }} />
                 <TextInput
-                  style={styles.input}
+                  style={{ 
+                    flex: 1, 
+                    fontSize: fontScale(16), 
+                    color: '#18181B',
+                    height: '100%',
+                  }}
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Password"
-                  placeholderTextColor={colors.textMutedLight}
+                  placeholderTextColor="#A1A1AA"
                   secureTextEntry={!showPassword}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ marginLeft: scale(12) }}>
                   <Ionicons 
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
-                    size={20} 
-                    color={colors.textMuted} 
+                    size={scale(20)} 
+                    color="#71717A" 
                   />
                 </TouchableOpacity>
               </View>
@@ -132,27 +196,34 @@ export default function LoginScreen() {
           
           {/* Login Button - Filled */}
           <TouchableOpacity 
-            style={[styles.loginButton, isLoading && styles.buttonDisabled]}
+            style={{ 
+              backgroundColor: '#10B95F',
+              paddingVertical: scale(18),
+              borderRadius: scale(16),
+              alignItems: 'center',
+              marginBottom: scale(24),
+              opacity: isLoading ? 0.6 : 1,
+            }}
             onPress={handleLogin}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={{ fontSize: fontScale(18), fontWeight: '700', color: '#FFFFFF' }}>Login</Text>
             )}
           </TouchableOpacity>
           
           {/* Forgot Password & Register */}
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.forgotButton}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
+          <View style={{ alignItems: 'center', gap: scale(16), marginTop: 'auto' }}>
+            <TouchableOpacity style={{ paddingVertical: scale(8) }}>
+              <Text style={{ fontSize: fontScale(14), fontWeight: '500', color: '#10B95F' }}>Forgot Password?</Text>
             </TouchableOpacity>
             
             <Link href="/auth/register" asChild>
-              <TouchableOpacity style={styles.registerLink}>
-                <Text style={styles.registerText}>Don't have an account? </Text>
-                <Text style={styles.registerLinkText}>Sign Up</Text>
+              <TouchableOpacity style={{ flexDirection: 'row', paddingVertical: scale(8) }}>
+                <Text style={{ fontSize: fontScale(14), color: '#71717A' }}>Don't have an account? </Text>
+                <Text style={{ fontSize: fontScale(14), fontWeight: '700', color: '#10B95F' }}>Sign Up</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -161,145 +232,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  flex1: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.lightCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontFamily: fonts.extraBold,
-    fontSize: 48,
-    color: colors.primary,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    marginBottom: 24,
-  },
-  socialButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: colors.lightCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: colors.lossAlpha,
-    marginBottom: 16,
-    gap: 8,
-  },
-  errorText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.loss,
-    flex: 1,
-  },
-  form: {
-    gap: 20,
-    marginBottom: 24,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  inputLabel: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    color: colors.textMuted,
-    letterSpacing: 1,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.lightCard,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 16,
-    color: colors.textDark,
-    paddingVertical: 16,
-  },
-  loginButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  loginButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.white,
-  },
-  footer: {
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 'auto',
-  },
-  forgotButton: {
-    paddingVertical: 8,
-  },
-  forgotText: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: colors.primary,
-  },
-  registerLink: {
-    flexDirection: 'row',
-    paddingVertical: 8,
-  },
-  registerText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.textMuted,
-  },
-  registerLinkText: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    color: colors.primary,
-  },
-});
