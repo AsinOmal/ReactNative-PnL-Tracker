@@ -102,6 +102,27 @@ export default function CalendarScreen() {
   const streak = calculateStreak();
   const stats = yearStats();
   
+  // Calculate max absolute P&L for the year (for intensity scaling)
+  const yearMonths = monthRecords.filter(m => m.month.startsWith(`${selectedYear}-`));
+  const maxAbsPnL = Math.max(
+    ...yearMonths.map(m => Math.abs(m.netProfitLoss)),
+    1 // prevent division by zero
+  );
+  
+  // Get intensity-based color (stronger color for bigger gains/losses)
+  const getHeatMapColor = (pnl: number, isBackground: boolean) => {
+    const intensity = Math.min(Math.abs(pnl) / maxAbsPnL, 1); // 0 to 1
+    const minOpacity = isBackground ? 0.08 : 0.3;
+    const maxOpacity = isBackground ? 0.25 : 0.5;
+    const opacity = minOpacity + (intensity * (maxOpacity - minOpacity));
+    
+    if (pnl >= 0) {
+      return `rgba(16, 185, 95, ${opacity})`;
+    } else {
+      return `rgba(239, 68, 68, ${opacity})`;
+    }
+  };
+  
   // Calculate tile width (3 columns with gaps)
   const tileWidth = (screenWidth - scale(40) - scale(20)) / 3; // 40 = horizontal padding, 20 = 2 gaps
   
@@ -246,8 +267,9 @@ export default function CalendarScreen() {
             let statusColor = themeColors.textMuted;
             
             if (data) {
-              bgColor = data.netProfitLoss >= 0 ? colors.profitLight : colors.lossLight;
-              borderColor = data.netProfitLoss >= 0 ? 'rgba(16, 185, 95, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+              // Use intensity-based heat map colors
+              bgColor = getHeatMapColor(data.netProfitLoss, true);
+              borderColor = getHeatMapColor(data.netProfitLoss, false);
               statusColor = data.netProfitLoss >= 0 ? colors.profit : colors.loss;
             }
             
