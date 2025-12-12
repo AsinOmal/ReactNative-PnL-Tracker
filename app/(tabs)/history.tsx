@@ -179,7 +179,7 @@ export default function HistoryScreen() {
             </View>
             <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.profit : '#FFFFFF' }}>Total Gain</Text>
           </View>
-          <PrivacyAwareText value={totalProfit} format={(val) => formatCurrency(val)} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.profit : '#FFFFFF' }} maskedValue="••••••" />
+          <PrivacyAwareText value={totalProfit} format={(val) => formatCurrency(val)} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.profit : '#FFFFFF' }} maskedValue="••••••" numberOfLines={1} adjustsFontSizeToFit />
           <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{profitCount} winning months</Text>
         </LinearGradient>
         
@@ -195,7 +195,7 @@ export default function HistoryScreen() {
             </View>
             <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.loss : '#FFFFFF' }}>Total Loss</Text>
           </View>
-          <PrivacyAwareText value={totalLoss} format={(val) => `-${formatCurrency(val)}`} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.loss : '#FFFFFF' }} maskedValue="-••••••" />
+          <PrivacyAwareText value={totalLoss} format={(val) => `-${formatCurrency(val)}`} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.loss : '#FFFFFF' }} maskedValue="-••••••" numberOfLines={1} adjustsFontSizeToFit />
           <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{lossCount} losing months</Text>
         </LinearGradient>
       </View>

@@ -170,12 +170,12 @@ const StreakModal = ({
               <View style={{ flexDirection: 'row', width: '100%', backgroundColor: 'rgba(0,0,0,0.15)', borderRadius: scale(16), paddingVertical: scale(20), paddingHorizontal: scale(12), marginBottom: scale(20) }}>
                 <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: scale(8) }}>
                   <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: 'rgba(255,255,255,0.75)', marginBottom: scale(6), letterSpacing: 0.5 }}>Total Gains</Text>
-                  <PrivacyAwareText value={totalStreakGains} format={(val) => formatCurrency(val, true)} style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: '#FFFFFF' }} maskedValue="••••••" />
+                  <PrivacyAwareText value={totalStreakGains} format={(val) => formatCurrency(val, true)} style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: '#FFFFFF' }} maskedValue="••••••" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} />
                 </View>
                 <View style={{ width: 1, marginVertical: scale(4), backgroundColor: 'rgba(255,255,255,0.25)' }} />
                 <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: scale(8) }}>
                   <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: 'rgba(255,255,255,0.75)', marginBottom: scale(6), letterSpacing: 0.5 }}>Avg/Month</Text>
-                  <PrivacyAwareText value={totalStreakGains / streak} format={(val) => formatCurrency(val, true)} style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: '#FFFFFF' }} maskedValue="••••••" />
+                  <PrivacyAwareText value={totalStreakGains / streak} format={(val) => formatCurrency(val, true)} style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: '#FFFFFF' }} maskedValue="••••••" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} />
                 </View>
               </View>
               
@@ -217,7 +217,7 @@ const StreakModal = ({
               {/* Motivational Footer */}
               <View style={{ marginTop: scale(20), paddingHorizontal: scale(12) }}>
                 <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: 'rgba(255,255,255,0.75)', textAlign: 'center', fontStyle: 'italic' }}>
-                  "Consistency is the key to success. You're proving it!" 🏆
+Consistency is the key to success. You're proving it!
                 </Text>
               </View>
             </View>
@@ -236,6 +236,38 @@ export default function HomeScreen() {
   const { togglePrivacyMode } = usePrivacy();
   const [refreshing, setRefreshing] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
+  
+  // Typing animation state
+  const [typedGreeting, setTypedGreeting] = useState('');
+  const greetingFadeAnim = useRef(new Animated.Value(0)).current;
+  const greetingPrefix = `${getGreeting()}, `;
+  const userName = getUserName(displayName, user?.email);
+  const fullGreeting = `${greetingPrefix}${userName}!`;
+  
+  // Typing animation effect
+  useEffect(() => {
+    setTypedGreeting('');
+    let charIndex = 0;
+    
+    // Start fade in
+    Animated.timing(greetingFadeAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+    
+    // Type out the greeting
+    const typingInterval = setInterval(() => {
+      if (charIndex < fullGreeting.length) {
+        setTypedGreeting(fullGreeting.slice(0, charIndex + 1));
+        charIndex++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 80);
+    
+    return () => clearInterval(typingInterval);
+  }, [displayName, user?.email]);
   
   const recentMonths = getRecentMonths(3);
   const currentMonthKey = getMonthKey();
@@ -336,13 +368,32 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10B95F" />
         }
       >
-        {/* Header - Personalized Greeting */}
-        <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(20) }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted }}>{getGreeting()}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: scale(4) }}>
-            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text }}>{getUserName(displayName, user?.email)}</Text>
-            <Ionicons name="hand-left" size={scale(26)} color="#F59E0B" style={{ marginLeft: scale(8), opacity: 0.9 }} />
+        {/* Header - Premium Personalized Design */}
+        <View style={{ paddingHorizontal: scale(20), paddingTop: scale(12), paddingBottom: scale(24) }}>
+          {/* Top Row - Date */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(8) }}>
+            <View style={{ width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: '#10B95F' }} />
+            <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+            </Text>
           </View>
+          
+          {/* Greeting Section - Animated */}
+          <Animated.View style={{ opacity: greetingFadeAnim }}>
+            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(24), color: themeColors.text, lineHeight: fontScale(32) }}>
+              {typedGreeting.length <= greetingPrefix.length ? (
+                typedGreeting
+              ) : (
+                <>
+                  {greetingPrefix}
+                  <Text style={{ color: '#10B95F' }}>
+                    {typedGreeting.slice(greetingPrefix.length)}
+                  </Text>
+                </>
+              )}
+              <Text style={{ color: '#10B95F', opacity: typedGreeting.length < fullGreeting.length ? 1 : 0 }}>|</Text>
+            </Text>
+          </Animated.View>
         </View>
         
         {/* Hero P&L Card */}
@@ -364,6 +415,8 @@ export default function HomeScreen() {
                 format={(val) => formatCurrency(val, true)}
                 style={{ fontFamily: fonts.extraBold, fontSize: fontScale(42), color: '#FFFFFF', marginBottom: scale(16) }} 
                 maskedValue="••••••••"
+                numberOfLines={1}
+                adjustsFontSizeToFit
               />
             </TouchableOpacity>
             
