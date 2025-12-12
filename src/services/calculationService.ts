@@ -68,6 +68,9 @@ export function calculateOverallStats(months: MonthRecord[]): OverallStats {
       profitableMonths: 0,
       totalMonths: 0,
       winRate: 0,
+      averageWin: 0,
+      averageLoss: 0,
+      profitFactor: 0,
     };
   }
   
@@ -108,6 +111,9 @@ export function calculateOverallStats(months: MonthRecord[]): OverallStats {
     profitableMonths,
     totalMonths: months.length,
     winRate: (profitableMonths / months.length) * 100,
+    averageWin: profitableMonths > 0 ? totalProfit / profitableMonths : 0,
+    averageLoss: (months.length - profitableMonths) > 0 ? totalLoss / (months.length - profitableMonths) : 0,
+    profitFactor: totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? Infinity : 0,
   };
 }
 

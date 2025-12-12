@@ -6,13 +6,13 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import { calculateMonthMetrics } from '../../src/services/calculationService';
@@ -35,6 +35,7 @@ export default function MonthDetailsScreen() {
   const [withdrawals, setWithdrawals] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
   
   const colors = {
     bg: isDark ? '#0A0A0A' : '#FAFAFA',
@@ -396,7 +397,6 @@ export default function MonthDetailsScreen() {
                 </View>
               )}
               
-              {/* Action Buttons - PDF outlined, Delete filled */}
               <View style={styles.actionButtons}>
                 <TouchableOpacity 
                   style={styles.pdfButton}
@@ -424,203 +424,5 @@ export default function MonthDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  flex1: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 18,
-  },
-  link: {
-    fontSize: 16,
-  },
-  marginTop: {
-    marginTop: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    padding: 8,
-  },
-  backText: {
-    fontSize: 24,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  editButton: {
-    padding: 8,
-  },
-  editText: {
-    fontSize: 16,
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-  },
-  resultsCard: {
-    borderRadius: 16,
-    padding: 16,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  cardLabel: {
-    fontSize: 14,
-  },
-  cardValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  resultValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  divider: {
-    height: 1,
-    marginVertical: 8,
-  },
-  notesText: {
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  pdfButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#6366F1',
-  },
-  pdfButtonText: {
-    color: '#6366F1',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  deleteButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#EF4444',
-  },
-  deleteButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  inputPrefix: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    fontSize: 18,
-    paddingVertical: 16,
-  },
-  textArea: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    minHeight: 100,
-    fontSize: 16,
-  },
-  preview: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-  },
-  previewTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  previewRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  previewLabel: {
-    fontSize: 14,
-  },
-  previewValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  saveButton: {
-    backgroundColor: '#6366F1',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  spacer: {
-    height: 40,
-  },
-});
+
+

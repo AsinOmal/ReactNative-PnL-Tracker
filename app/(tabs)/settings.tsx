@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../../src/config/fonts';
 import { useAuth } from '../../src/context/AuthContext';
+import { usePrivacy } from '../../src/context/PrivacyContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import {
@@ -27,6 +28,7 @@ import { fontScale, scale } from '../../src/utils/scaling';
 
 export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
+  const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { user, logout } = useAuth();
   const { months } = useTrading();
   const router = useRouter();
@@ -182,6 +184,15 @@ export default function SettingsScreen() {
               type="toggle" 
               value={isDark} 
               onPress={toggleTheme} 
+              showBorder={true}
+            />
+            <SettingItem 
+              icon="eye-off" 
+              iconColor="#8B5CF6" 
+              label="Privacy Mode" 
+              type="toggle" 
+              value={isPrivacyMode} 
+              onPress={togglePrivacyMode} 
               showBorder={false}
             />
 

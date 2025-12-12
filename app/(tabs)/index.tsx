@@ -6,10 +6,13 @@ import { Animated, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, Vi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../src/components/EmptyState';
 import { MonthCard } from '../../src/components/MonthCard';
+import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
 import { fonts } from '../../src/config/fonts';
 import { useAuth } from '../../src/context/AuthContext';
+import { usePrivacy } from '../../src/context/PrivacyContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
+import { MonthRecord } from '../../src/types';
 import { formatMonthDisplay, getMonthKey } from '../../src/utils/dateUtils';
 import { formatCurrency, formatPercentage } from '../../src/utils/formatters';
 import { fontScale, scale } from '../../src/utils/scaling';
@@ -216,6 +219,7 @@ export default function HomeScreen() {
   const { months, stats, isLoading, loadMonths, getRecentMonths } = useTrading();
   const { isDark } = useTheme();
   const { user } = useAuth();
+  const { togglePrivacyMode } = usePrivacy();
   const [refreshing, setRefreshing] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
   
@@ -272,7 +276,7 @@ export default function HomeScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16) }}>
           <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted }}>{getGreeting()}</Text>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getFirstName(user?.email)}</Text>
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getFirstName(user?.email || undefined)}</Text>
         </View>
         <EmptyState
           title="Start Tracking"
@@ -307,7 +311,7 @@ export default function HomeScreen() {
         {/* Header - Personalized Greeting */}
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(20) }}>
           <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted }}>{getGreeting()}</Text>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getFirstName(user?.email)} 👋</Text>
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getFirstName(user?.email || undefined)} 👋</Text>
         </View>
         
         {/* Hero P&L Card */}
@@ -323,9 +327,14 @@ export default function HomeScreen() {
             <View style={{ position: 'absolute', bottom: -30, left: -30, width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.08)' }} />
             
             <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: 'rgba(255,255,255,0.8)', marginBottom: scale(4) }}>Total P&L</Text>
-            <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(42), color: '#FFFFFF', marginBottom: scale(16) }}>
-              {formatCurrency(stats.totalProfitLoss, true)}
-            </Text>
+            <TouchableOpacity onLongPress={togglePrivacyMode} activeOpacity={0.8}>
+              <PrivacyAwareText 
+                value={stats.totalProfitLoss}
+                format={(val) => formatCurrency(val, true)}
+                style={{ fontFamily: fonts.extraBold, fontSize: fontScale(42), color: '#FFFFFF', marginBottom: scale(16) }} 
+                maskedValue="••••••••"
+              />
+            </TouchableOpacity>
             
             <View style={{ flexDirection: 'row', gap: scale(24) }}>
               <View>

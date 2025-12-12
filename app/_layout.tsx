@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 import { fontAssets, fonts } from '../src/config/fonts';
 import { colors } from '../src/config/theme';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { PrivacyProvider } from '../src/context/PrivacyContext';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 import { TradingProvider } from '../src/context/TradingContext';
 
@@ -156,9 +157,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <AuthProvider>
-          <TradingProvider>
-            <AuthenticatedLayout />
-          </TradingProvider>
+          <PrivacyProvider>
+            <TradingProvider>
+              <AuthenticatedLayout />
+            </TradingProvider>
+          </PrivacyProvider>
         </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

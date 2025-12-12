@@ -44,6 +44,9 @@ export interface OverallStats {
   profitableMonths: number;
   totalMonths: number;
   winRate: number;
+  averageWin: number;
+  averageLoss: number;
+  profitFactor: number;
 }
 
 // Chart data point

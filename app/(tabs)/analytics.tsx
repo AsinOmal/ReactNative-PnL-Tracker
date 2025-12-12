@@ -1,19 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
 import { fonts } from '../../src/config/fonts';
+import { usePrivacy } from '../../src/context/PrivacyContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import { formatMonthDisplay } from '../../src/utils/dateUtils';
 import { fontScale, scale, screenWidth } from '../../src/utils/scaling';
 
 export default function AnalyticsScreen() {
+  const router = useRouter();
   const { isDark } = useTheme();
   const { months, stats, loadMonths } = useTrading();
+  const { togglePrivacyMode, isPrivacyMode } = usePrivacy(); // Use for charts
   const [refreshing, setRefreshing] = useState(false);
+  const [tooltip, setTooltip] = useState<{ x: number, y: number, value: number, index: number } | null>(null);
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -102,9 +108,26 @@ export default function AnalyticsScreen() {
         }
       >
         {/* Header */}
-        <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(24) }}>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(32), color: themeColors.text }}>Analytics</Text>
-          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: themeColors.textMuted, marginTop: scale(4) }}>Track your trading performance</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(24) }}>
+          <View>
+            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(32), color: themeColors.text }}>Analytics</Text>
+            <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: themeColors.textMuted, marginTop: scale(4) }}>Track your trading performance</Text>
+          </View>
+          <TouchableOpacity 
+            onPress={() => router.push('/compare')}
+            style={{ 
+              width: scale(44), 
+              height: scale(44), 
+              borderRadius: scale(12), 
+              backgroundColor: themeColors.card, 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: themeColors.border
+            }}
+          >
+            <Ionicons name="git-compare-outline" size={scale(24)} color={themeColors.text} />
+          </TouchableOpacity>
         </View>
         
         {months.length === 0 ? (
@@ -132,7 +155,14 @@ export default function AnalyticsScreen() {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: scale(20) }}>
                   <View>
                     <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: 'rgba(255,255,255,0.75)', marginBottom: scale(4) }}>Total P&L</Text>
-                    <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(36), color: '#FFFFFF' }}>{formatCurrency(stats.totalProfitLoss)}</Text>
+                    <TouchableOpacity onLongPress={togglePrivacyMode} activeOpacity={0.8}>
+                      <PrivacyAwareText
+                        value={stats.totalProfitLoss}
+                        format={formatCurrency}
+                        style={{ fontFamily: fonts.extraBold, fontSize: fontScale(36), color: '#FFFFFF' }}
+                        maskedValue="••••••"
+                      />
+                    </TouchableOpacity>
                   </View>
                   <View style={{ width: scale(56), height: scale(56), borderRadius: scale(16), backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}>
                     <Ionicons name="trending-up" size={scale(28)} color="#FFFFFF" />
@@ -182,8 +212,9 @@ export default function AnalyticsScreen() {
                     }}
                     width={screenWidth - scale(80)}
                     height={scale(180)}
-                    yAxisLabel="$"
-                    yAxisSuffix=""
+                    yAxisLabel={isPrivacyMode ? "" : "$"}
+                    yAxisSuffix={isPrivacyMode ? "" : ""}
+                    formatYLabel={(val) => isPrivacyMode ? "•••" : parseInt(val).toLocaleString()}
                     chartConfig={{
                       backgroundColor: 'transparent',
                       backgroundGradientFrom: themeColors.card,
@@ -206,6 +237,30 @@ export default function AnalyticsScreen() {
                     style={{ borderRadius: scale(12), marginLeft: -scale(16) }}
                     withInnerLines={true}
                     withOuterLines={false}
+                    onDataPointClick={({ value, x, y, index }) => {
+                      if (isPrivacyMode) return;
+                      setTooltip({
+                        x, y, value, index
+                      });
+                      setTimeout(() => setTooltip(null), 3000);
+                    }}
+                    decorator={() => {
+                      return tooltip ? (
+                        <View style={{
+                          position: 'absolute',
+                          left: tooltip.x - 40,
+                          top: tooltip.y - 40,
+                          backgroundColor: themeColors.text,
+                          padding: 8,
+                          borderRadius: 8,
+                          zIndex: 100
+                        }}>
+                          <Text style={{ color: themeColors.bg, fontSize: 12, fontWeight: 'bold' }}>
+                            {formatCurrency(tooltip.value)}
+                          </Text>
+                        </View>
+                      ) : null;
+                    }}
                   />
                 </View>
               </View>
@@ -244,6 +299,44 @@ export default function AnalyticsScreen() {
                     <View style={{ height: '100%', borderRadius: scale(6), backgroundColor: colors.profit, flex: profitableMonths || 0.5 }} />
                     <View style={{ height: '100%', borderRadius: scale(6), backgroundColor: colors.loss, flex: losingMonths || 0.5 }} />
                   </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Risk Analysis */}
+            <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
+              <View style={{ backgroundColor: themeColors.card, borderRadius: scale(20), padding: scale(20), borderWidth: 1, borderColor: themeColors.border }}>
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(17), color: themeColors.text, marginBottom: scale(20) }}>Risk Analysis</Text>
+                
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: scale(16) }}>
+                   <View style={{ flex: 1 }}>
+                     <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>Avg Win</Text>
+                     <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.profit, marginTop: scale(4) }}>{formatCurrency(stats.averageWin || 0)}</Text>
+                   </View>
+                   <View style={{ flex: 1 }}>
+                     <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>Avg Loss</Text>
+                     <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.loss, marginTop: scale(4) }}>{formatCurrency(stats.averageLoss || 0)}</Text>
+                   </View>
+                </View>
+
+                <View style={{ height: 1, backgroundColor: themeColors.border, marginVertical: scale(8) }} />
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: scale(8) }}>
+                   <View style={{ flex: 1 }}>
+                     <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>Profit Factor</Text>
+                     <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(24), color: themeColors.text, marginTop: scale(4) }}>
+                        {stats.profitFactor === Infinity ? '∞' : stats.profitFactor.toFixed(2)}
+                     </Text>
+                   </View>
+                   
+                   <View style={{ flex: 1, justifyContent: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: stats.profitFactor > 1.5 ? colors.profit : stats.profitFactor > 1 ? '#FBBF24' : colors.loss }} />
+                          <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>
+                             {stats.profitFactor > 1.5 ? 'Excellent' : stats.profitFactor > 1 ? 'Good' : 'Needs Work'}
+                          </Text>
+                      </View>
+                   </View>
                 </View>
               </View>
             </View>

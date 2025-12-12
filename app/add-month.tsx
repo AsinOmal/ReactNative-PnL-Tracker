@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MonthPicker } from '../src/components/MonthPicker';
 import { fonts } from '../src/config/fonts';
 import { colors } from '../src/config/theme';
+import { useAuth } from '../src/context/AuthContext';
 import { useTheme } from '../src/context/ThemeContext';
 import { useTrading } from '../src/context/TradingContext';
 import { calculateMonthMetrics, createMonthRecord } from '../src/services/calculationService';
@@ -38,6 +39,7 @@ export default function AddMonthScreen() {
   const [notes, setNotes] = useState('');
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
   
   const existingMonths = months.map(m => m.month);
   
@@ -132,6 +134,7 @@ export default function AddMonthScreen() {
       await addMonth(record);
       router.back();
     } catch (error) {
+      console.error(error);
       Alert.alert('Error', 'Failed to save month. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -327,7 +330,7 @@ export default function AddMonthScreen() {
               textAlignVertical="top"
             />
           </View>
-          
+
           <View style={styles.spacer} />
         </ScrollView>
         
