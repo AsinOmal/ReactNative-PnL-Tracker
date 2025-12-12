@@ -29,6 +29,9 @@ function AuthenticatedLayout() {
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const previousAuthState = useRef<boolean | null>(null);
   
+  // Extra validation: ensure user has a valid UID (not just truthy user object)
+  const isAuthValid = isAuthenticated && user?.uid && user?.email;
+  
   // Check onboarding status once on mount
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -47,12 +50,12 @@ function AuthenticatedLayout() {
     if (authLoading || isOnboardingComplete === null || initialCheckDone) return;
     
     setInitialCheckDone(true);
-    previousAuthState.current = isAuthenticated;
+    previousAuthState.current = !!isAuthValid;
     
     const inAuthGroup = segments[0] === 'auth';
     const inOnboarding = segments[0] === 'onboarding' || segments[0] === 'welcome-onboarding';
     
-    console.log('Initial navigation check:', { isAuthenticated, isOnboardingComplete, segment: segments[0] });
+    console.log('Initial navigation check:', { isAuthValid, isOnboardingComplete, segment: segments[0], userUid: user?.uid });
     
     // Onboarding not complete
     if (!isOnboardingComplete) {
@@ -60,8 +63,8 @@ function AuthenticatedLayout() {
       return;
     }
     
-    // User is authenticated - go to home
-    if (isAuthenticated) {
+    // User is authenticated with valid credentials - go to home
+    if (isAuthValid) {
       router.replace('/(tabs)');
       return;
     }
@@ -77,25 +80,28 @@ function AuthenticatedLayout() {
     // Skip if initial check not done or still loading
     if (!initialCheckDone || authLoading) return;
     
+    const currentAuthValid = !!isAuthValid;
+    const wasAuthenticated = previousAuthState.current;
+    
     // Skip if auth state hasn't actually changed
-    if (previousAuthState.current === isAuthenticated) return;
+    if (wasAuthenticated === currentAuthValid) return;
     
-    console.log('Auth state changed from', previousAuthState.current, 'to', isAuthenticated);
-    previousAuthState.current = isAuthenticated;
+    console.log('Auth state changed from', wasAuthenticated, 'to', currentAuthValid, 'user:', user?.email);
+    previousAuthState.current = currentAuthValid;
     
-    // User just logged in
-    if (isAuthenticated) {
+    // User just logged in with valid credentials
+    if (currentAuthValid) {
       console.log('User logged in, navigating to tabs');
       router.replace('/(tabs)');
       return;
     }
     
-    // User just logged out
-    if (!isAuthenticated && previousAuthState.current === true) {
+    // User just logged out (was authenticated, now not)
+    if (!currentAuthValid && wasAuthenticated === true) {
       console.log('User logged out, navigating to auth/welcome');
       router.replace('/auth/welcome');
     }
-  }, [isAuthenticated, initialCheckDone, authLoading]);
+  }, [isAuthValid, initialCheckDone, authLoading]);
   
   // Show loading screen during initial load
   if (authLoading || isOnboardingComplete === null) {
