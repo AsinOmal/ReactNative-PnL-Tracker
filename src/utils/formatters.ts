@@ -41,14 +41,18 @@ export function formatWithSign(value: number): string {
 /**
  * Parse currency string to number
  */
+/**
+ * Parse currency string to number (handles commas)
+ */
 export function parseCurrency(value: string): number {
-  const cleaned = value.replace(/[^0-9.-]/g, '');
+  if (!value) return 0;
+  const cleaned = value.replace(/,/g, '').replace(/[^0-9.-]/g, '');
   const parsed = parseFloat(cleaned);
   return isNaN(parsed) ? 0 : parsed;
 }
 
 /**
- * Format input for currency field (allows only valid number input)
+ * Format input for currency field (adds commas as you type)
  */
 export function formatCurrencyInput(value: string): string {
   // Remove all non-numeric characters except decimal point
@@ -64,6 +68,12 @@ export function formatCurrencyInput(value: string): string {
   if (parts.length === 2 && parts[1].length > 2) {
     cleaned = parts[0] + '.' + parts[1].substring(0, 2);
   }
+
+  // Add commas to the integer part
+  const integerPart = parts[0];
+  const decimalPart = parts.length > 1 ? '.' + parts[1].substring(0, 2) : '';
   
-  return cleaned;
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  
+  return formattedInteger + decimalPart;
 }

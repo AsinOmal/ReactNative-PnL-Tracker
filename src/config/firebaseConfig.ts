@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, initializeAuth } from 'firebase/auth';
+// @ts-ignore
+import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration
@@ -16,14 +17,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Auth
-// Note: initializeAuth with persistence is preferred for RN but often causes issues with hot reload.
-// Using getAuth() which typically handles state automatically.
+// We need to use getReactNativePersistence to ensure login persists across reloads
+// We try initializeAuth first; if it throws (e.g. already initialized), we use getAuth
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 let auth;
 try {
-  auth = getAuth(app);
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
 } catch (e) {
-    // If getAuth fails (rare), try initializeAuth without persistence or simple flow
-    auth = initializeAuth(app);
+  // Parsing check or already initialized
+  auth = getAuth(app);
 }
 
 // Initialize Firestore

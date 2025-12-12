@@ -7,6 +7,7 @@ import {
     ScrollView,
     Switch,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -30,8 +31,16 @@ export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { user, logout } = useAuth();
-  const { months } = useTrading();
+  const { months, displayName, setDisplayName } = useTrading();
   const router = useRouter();
+  
+  const [editingName, setEditingName] = useState(false);
+  const [localName, setLocalName] = useState(displayName);
+  
+  // Sync localName when displayName changes
+  useEffect(() => {
+    setLocalName(displayName);
+  }, [displayName]);
   
   const [biometric, setBiometric] = useState<BiometricCapabilities | null>(null);
   const [biometricOn, setBiometricOn] = useState(false);
@@ -162,9 +171,36 @@ export default function SettingsScreen() {
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text }}>
-                {user?.email?.split('@')[0] || 'TradeX User'}
-              </Text>
+              {editingName ? (
+                <TextInput
+                  style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, padding: 0, borderBottomWidth: 1, borderBottomColor: '#10B95F' }}
+                  value={localName}
+                  onChangeText={setLocalName}
+                  onBlur={() => {
+                    setEditingName(false);
+                    if (localName !== displayName) {
+                      setDisplayName(localName.trim());
+                    }
+                  }}
+                  onSubmitEditing={() => {
+                    setEditingName(false);
+                    if (localName !== displayName) {
+                      setDisplayName(localName.trim());
+                    }
+                  }}
+                  autoFocus
+                  returnKeyType="done"
+                  placeholder="Enter your name"
+                  placeholderTextColor={themeColors.textMuted}
+                />
+              ) : (
+                <TouchableOpacity onPress={() => setEditingName(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text }}>
+                    {displayName || user?.email?.split('@')[0] || 'TradeX User'}
+                  </Text>
+                  <Ionicons name="pencil" size={fontScale(14)} color={themeColors.textMuted} />
+                </TouchableOpacity>
+              )}
               <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: themeColors.textMuted, marginTop: scale(2) }}>
                 {user?.email || 'Not signed in'}
               </Text>

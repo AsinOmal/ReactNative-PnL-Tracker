@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
@@ -16,10 +16,22 @@ import { fontScale, scale, screenWidth } from '../../src/utils/scaling';
 export default function AnalyticsScreen() {
   const router = useRouter();
   const { isDark } = useTheme();
-  const { months, stats, loadMonths } = useTrading();
+  const { months, stats, loadMonths, yearlyGoal, setYearlyGoal } = useTrading();
   const { togglePrivacyMode, isPrivacyMode } = usePrivacy(); // Use for charts
   const [refreshing, setRefreshing] = useState(false);
   const [tooltip, setTooltip] = useState<{ x: number, y: number, value: number, index: number } | null>(null);
+  
+  const [showGoalInput, setShowGoalInput] = useState(false);
+  const [tempGoal, setTempGoal] = useState('');
+
+  const handleSaveGoal = async () => {
+      const num = parseFloat(tempGoal.replace(/[^0-9.]/g, ''));
+      if (!isNaN(num)) {
+          await setYearlyGoal(num);
+      }
+      setShowGoalInput(false);
+      setTempGoal('');
+  };
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -186,6 +198,94 @@ export default function AnalyticsScreen() {
               </LinearGradient>
             </View>
             
+            {/* Yearly Goal */}
+            <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
+                 <TouchableOpacity 
+                    onPress={() => setShowGoalInput(true)}
+                    activeOpacity={0.9}
+                    style={{ 
+                        borderRadius: scale(24), 
+                        borderWidth: 1, 
+                        borderColor: 'rgba(99, 102, 241, 0.2)', 
+                        backgroundColor: themeColors.card,
+                        overflow: 'hidden',
+                        shadowColor: "#6366F1",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 12,
+                        elevation: 4
+                    }}
+                 >
+                    <LinearGradient
+                        colors={isDark ? ['rgba(99, 102, 241, 0.15)', 'rgba(139, 92, 246, 0.05)'] : ['rgba(99, 102, 241, 0.08)', 'rgba(139, 92, 246, 0.02)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{ padding: scale(24) }}
+                    >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: scale(20) }}>
+                            <View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginBottom: scale(4) }}>
+                                    <Ionicons name="flag" size={scale(16)} color="#6366F1" />
+                                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#6366F1', textTransform: 'uppercase', letterSpacing: 0.5 }}>Yearly Target</Text>
+                                </View>
+                                <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>
+                                    {stats.totalProfitLoss >= (yearlyGoal || 0) && (yearlyGoal || 0) > 0 ? "🎉 Goal Achieved!" : "Keep pushing!"}
+                                </Text>
+                            </View>
+                            {(yearlyGoal || 0) > 0 && (
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: themeColors.text }}>{Math.round((stats.totalProfitLoss / (yearlyGoal || 1)) * 100)}%</Text>
+                                    <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(11), color: themeColors.textMuted }}>Complete</Text>
+                                </View>
+                            )}
+                        </View>
+
+                        {(yearlyGoal || 0) > 0 ? (
+                            <>
+                                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: scale(4), marginBottom: scale(12) }}>
+                                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(32), color: themeColors.text }}>
+                                        {formatCurrency(stats.totalProfitLoss)}
+                                    </Text>
+                                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted, marginBottom: scale(4) }}>
+                                        / {formatCurrency(yearlyGoal || 0)}
+                                    </Text>
+                                </View>
+                                
+                                <View style={{ height: scale(12), backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', borderRadius: scale(6), overflow: 'hidden', marginBottom: scale(12) }}>
+                                    <LinearGradient
+                                        colors={['#6366F1', '#8B5CF6']}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }}
+                                        style={{ 
+                                            height: '100%', 
+                                            width: `${Math.min(Math.max((stats.totalProfitLoss / (yearlyGoal || 1)) * 100, 0), 100)}%`, 
+                                            borderRadius: scale(6)
+                                        }} 
+                                    />
+                                </View>
+                                
+                                {stats.totalProfitLoss < (yearlyGoal || 0) && (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: scale(4) }}>
+                                        <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>To go:</Text>
+                                        <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(13), color: themeColors.text }}>
+                                            {formatCurrency((yearlyGoal || 0) - stats.totalProfitLoss)}
+                                        </Text>
+                                    </View>
+                                )}
+                            </>
+                        ) : (
+                            <View style={{ alignItems: 'center', paddingVertical: scale(10) }}>
+                                <View style={{ width: scale(48), height: scale(48), borderRadius: scale(24), backgroundColor: 'rgba(99, 102, 241, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: scale(12) }}>
+                                    <Ionicons name="add" size={scale(24)} color="#6366F1" />
+                                </View>
+                                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text, marginBottom: scale(4) }}>Set a 2025 Goal</Text>
+                                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: themeColors.textMuted }}>Tap to track your yearly progress</Text>
+                            </View>
+                        )}
+                    </LinearGradient>
+                 </TouchableOpacity>
+            </View>
+
             {/* P&L Chart */}
             {hasChartData && (
               <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
@@ -390,6 +490,56 @@ export default function AnalyticsScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* Goal Input Modal */}
+      <Modal
+        visible={showGoalInput}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowGoalInput(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowGoalInput(false)}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 }}>
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                        <View style={{ backgroundColor: themeColors.card, borderRadius: 24, padding: 24 }}>
+                            <Text style={{ fontFamily: fonts.bold, fontSize: 20, color: themeColors.text, marginBottom: 8, textAlign: 'center' }}>Set Yearly Goal</Text>
+                            <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: themeColors.textMuted, marginBottom: 20, textAlign: 'center' }}>
+                                What is your profit target for this year?
+                            </Text>
+                            
+                            <View style={{ backgroundColor: themeColors.bg, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 20, borderWidth: 1, borderColor: themeColors.border }}>
+                                <TextInput
+                                    placeholder="e.g. 50,000"
+                                    placeholderTextColor={themeColors.textMuted}
+                                    style={{ fontFamily: fonts.bold, fontSize: 24, color: themeColors.text, textAlign: 'center' }}
+                                    keyboardType="numeric"
+                                    value={tempGoal}
+                                    onChangeText={setTempGoal}
+                                    autoFocus
+                                />
+                            </View>
+
+                            <View style={{ flexDirection: 'row', gap: 12 }}>
+                                <TouchableOpacity 
+                                    onPress={() => setShowGoalInput(false)}
+                                    style={{ flex: 1, padding: 16, borderRadius: 16, backgroundColor: themeColors.bg, alignItems: 'center' }}
+                                >
+                                    <Text style={{ fontFamily: fonts.semiBold, color: themeColors.text }}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    onPress={handleSaveGoal}
+                                    style={{ flex: 1, padding: 16, borderRadius: 16, backgroundColor: '#6366F1', alignItems: 'center' }}
+                                >
+                                    <Text style={{ fontFamily: fonts.semiBold, color: '#FFFFFF' }}>Save Goal</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </KeyboardAvoidingView>
+                </TouchableWithoutFeedback>
+            </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { ThemeWrapper } from '../src/components/ThemeWrapper';
 import { fontAssets, fonts } from '../src/config/fonts';
 import { colors } from '../src/config/theme';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
@@ -156,13 +157,15 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <AuthProvider>
-          <PrivacyProvider>
-            <TradingProvider>
-              <AuthenticatedLayout />
-            </TradingProvider>
-          </PrivacyProvider>
-        </AuthProvider>
+        <ThemeWrapper>
+          <AuthProvider>
+            <PrivacyProvider>
+              <TradingProvider>
+                <AuthenticatedLayout />
+              </TradingProvider>
+            </PrivacyProvider>
+          </AuthProvider>
+        </ThemeWrapper>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

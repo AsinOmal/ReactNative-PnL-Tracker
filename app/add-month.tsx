@@ -1,16 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import 'react-native-get-random-values';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,15 +42,7 @@ export default function AddMonthScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   
-  const existingMonths = months.map(m => m.month);
-  
-  const themeColors = {
-    bg: isDark ? colors.darkBg : colors.lightBg,
-    card: isDark ? colors.darkCard : colors.lightCard,
-    border: isDark ? colors.darkBorder : colors.lightBorder,
-    text: isDark ? colors.textLight : colors.textDark,
-    textMuted: isDark ? colors.textMuted : colors.textMutedLight,
-  };
+  const existingMonths = months.map((m) => m.month);
   
   const calculations = useMemo(() => {
     const start = parseCurrency(startingCapital);
@@ -84,7 +77,7 @@ export default function AddMonthScreen() {
         break;
     }
 
-    setErrors(prev => ({ ...prev, [field]: error }));
+    setErrors((prev) => ({ ...prev, [field]: error }));
     return !error;
   };
 
@@ -140,27 +133,50 @@ export default function AddMonthScreen() {
       setIsSubmitting(false);
     }
   };
+
+  const themeColors = {
+    bg: isDark ? colors.darkBg : colors.lightBg,
+    card: isDark ? colors.darkCard : colors.lightCard,
+    text: isDark ? colors.textLight : colors.textDark,
+    textMuted: isDark ? colors.textMuted : colors.textMutedLight,
+    border: isDark ? colors.darkBorder : colors.lightBorder,
+    inputBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+    summaryBg: isDark ? 'rgba(16, 185, 95, 0.08)' : 'rgba(16, 185, 95, 0.05)',
+  };
   
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bg }]}>
+      <LinearGradient
+        colors={
+          isDark
+            ? ['rgba(2,0,36,0)', 'rgba(16, 185, 95, 0.05)']
+            : ['rgba(255,255,255,0)', 'rgba(16, 185, 95, 0.05)']
+        }
+        style={styles.gradient}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        pointerEvents="none"
+      />
+      
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex1}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[styles.backButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
+          >
             <Ionicons name="close" size={24} color={themeColors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: themeColors.text }]}>
-            New Month
-          </Text>
+          <Text style={[styles.headerTitle, { color: themeColors.text }]}>New Month</Text>
           <View style={styles.headerSpacer} />
         </View>
         
         <ScrollView 
-          style={styles.flex1} 
-          contentContainerStyle={styles.scrollContent} 
+          style={styles.flex1}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* Month Selector Card */}
@@ -189,59 +205,61 @@ export default function AddMonthScreen() {
             <Text style={[styles.cardTitle, { color: themeColors.text }]}>Capital</Text>
             
             <View style={styles.inputRow}>
-              <Text style={[styles.inputLabel, { color: themeColors.textMuted }]}>Starting</Text>
-              <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <View style={[styles.inputField, { 
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                  borderColor: errors.startingCapital ? colors.loss : 'transparent',
-                  borderWidth: 1
-                }]}>
-                  <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
-                  <TextInput
-                    style={[styles.input, { color: themeColors.text }]}
-                    value={startingCapital}
-                    onChangeText={(text) => {
-                      setStartingCapital(formatCurrencyInput(text));
-                      if (errors.startingCapital) validateField('startingCapital', text);
-                    }}
-                    onBlur={() => validateField('startingCapital', startingCapital)}
-                    placeholder="0.00"
-                    placeholderTextColor={themeColors.textMuted}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-                {errors.startingCapital ? (
-                  <Text style={{ color: colors.loss, fontSize: 12, marginTop: 4 }}>{errors.startingCapital}</Text>
-                ) : null}
+              <Text style={[styles.inputLabel, { color: themeColors.textMuted }]}>Starting Balance</Text>
+              <View style={[
+                styles.inputField,
+                { backgroundColor: themeColors.inputBg, borderColor: errors.startingCapital ? colors.loss : 'transparent' },
+                errors.startingCapital && styles.inputError
+              ]}>
+                <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
+                <TextInput
+                  style={[styles.input, { color: themeColors.text }]}
+                  value={startingCapital}
+                  onChangeText={(text) => {
+                    setStartingCapital(formatCurrencyInput(text));
+                    if (errors.startingCapital) validateField('startingCapital', text);
+                  }}
+                  onBlur={() => validateField('startingCapital', startingCapital)}
+                  placeholder="0.00"
+                  placeholderTextColor={themeColors.textMuted}
+                  keyboardType="numeric"
+                />
               </View>
+              {errors.startingCapital && (
+                <View style={styles.errorRow}>
+                  <Ionicons name="alert-circle" size={14} color={colors.loss} />
+                  <Text style={styles.errorText}>{errors.startingCapital}</Text>
+                </View>
+              )}
             </View>
             
             <View style={styles.inputRow}>
-              <Text style={[styles.inputLabel, { color: themeColors.textMuted }]}>Ending</Text>
-              <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <View style={[styles.inputField, { 
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                  borderColor: errors.endingCapital ? colors.loss : 'transparent',
-                  borderWidth: 1
-                }]}>
-                  <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
-                  <TextInput
-                    style={[styles.input, { color: themeColors.text }]}
-                    value={endingCapital}
-                    onChangeText={(text) => {
-                      setEndingCapital(formatCurrencyInput(text));
-                      if (errors.endingCapital) validateField('endingCapital', text);
-                    }}
-                    onBlur={() => validateField('endingCapital', endingCapital)}
-                    placeholder="0.00"
-                    placeholderTextColor={themeColors.textMuted}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-                {errors.endingCapital ? (
-                  <Text style={{ color: colors.loss, fontSize: 12, marginTop: 4 }}>{errors.endingCapital}</Text>
-                ) : null}
+              <Text style={[styles.inputLabel, { color: themeColors.textMuted }]}>Ending Balance</Text>
+              <View style={[
+                styles.inputField,
+                { backgroundColor: themeColors.inputBg, borderColor: errors.endingCapital ? colors.loss : 'transparent' },
+                errors.endingCapital && styles.inputError
+              ]}>
+                <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
+                <TextInput
+                  style={[styles.input, { color: themeColors.text }]}
+                  value={endingCapital}
+                  onChangeText={(text) => {
+                    setEndingCapital(formatCurrencyInput(text));
+                    if (errors.endingCapital) validateField('endingCapital', text);
+                  }}
+                  onBlur={() => validateField('endingCapital', endingCapital)}
+                  placeholder="0.00"
+                  placeholderTextColor={themeColors.textMuted}
+                  keyboardType="numeric"
+                />
               </View>
+              {errors.endingCapital && (
+                <View style={styles.errorRow}>
+                  <Ionicons name="alert-circle" size={14} color={colors.loss} />
+                  <Text style={styles.errorText}>{errors.endingCapital}</Text>
+                </View>
+              )}
             </View>
           </View>
           
@@ -251,54 +269,50 @@ export default function AddMonthScreen() {
             
             <View style={styles.inputRow}>
               <View style={styles.inputLabelRow}>
-                <Ionicons name="arrow-down-circle" size={16} color={colors.profit} />
+                <Ionicons name="arrow-down-circle" size={18} color={colors.profit} />
                 <Text style={[styles.inputLabel, { color: themeColors.textMuted }]}>Deposits</Text>
               </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <View style={[styles.inputField, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                  <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
-                  <TextInput
-                    style={[styles.input, { color: themeColors.text }]}
-                    value={deposits}
-                    onChangeText={(text) => setDeposits(formatCurrencyInput(text))}
-                    placeholder="0.00"
-                    placeholderTextColor={themeColors.textMuted}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
+              <View style={[styles.inputField, { backgroundColor: themeColors.inputBg, borderColor: 'transparent' }]}>
+                <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
+                <TextInput
+                  style={[styles.input, { color: themeColors.text }]}
+                  value={deposits}
+                  onChangeText={(text) => setDeposits(formatCurrencyInput(text))}
+                  placeholder="0.00"
+                  placeholderTextColor={themeColors.textMuted}
+                  keyboardType="decimal-pad"
+                />
               </View>
             </View>
             
             <View style={styles.inputRow}>
               <View style={styles.inputLabelRow}>
-                <Ionicons name="arrow-up-circle" size={16} color={colors.loss} />
+                <Ionicons name="arrow-up-circle" size={18} color={colors.loss} />
                 <Text style={[styles.inputLabel, { color: themeColors.textMuted }]}>Withdrawals</Text>
               </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <View style={[styles.inputField, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                  <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
-                  <TextInput
-                    style={[styles.input, { color: themeColors.text }]}
-                    value={withdrawals}
-                    onChangeText={(text) => setWithdrawals(formatCurrencyInput(text))}
-                    placeholder="0.00"
-                    placeholderTextColor={themeColors.textMuted}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
+              <View style={[styles.inputField, { backgroundColor: themeColors.inputBg, borderColor: 'transparent' }]}>
+                <Text style={[styles.currencySymbol, { color: themeColors.textMuted }]}>$</Text>
+                <TextInput
+                  style={[styles.input, { color: themeColors.text }]}
+                  value={withdrawals}
+                  onChangeText={(text) => setWithdrawals(formatCurrencyInput(text))}
+                  placeholder="0.00"
+                  placeholderTextColor={themeColors.textMuted}
+                  keyboardType="decimal-pad"
+                />
               </View>
             </View>
           </View>
           
           {/* Live Summary */}
           {calculations && (
-            <View style={[styles.summaryCard, { backgroundColor: isDark ? 'rgba(16, 185, 95, 0.08)' : 'rgba(16, 185, 95, 0.05)' }]}>
+            <View style={[styles.summaryCard, { backgroundColor: themeColors.summaryBg, borderColor: 'rgba(16, 185, 95, 0.2)' }]}>
               <View style={styles.summaryHeader}>
                 <Ionicons name="analytics" size={20} color={colors.primary} />
                 <Text style={[styles.summaryTitle, { color: themeColors.text }]}>Summary</Text>
               </View>
               
-              <View style={styles.summaryGrid}>
+              <View style={[styles.summaryGrid, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                 <View style={styles.summaryItem}>
                   <Text style={[styles.summaryLabel, { color: themeColors.textMuted }]}>Net P&L</Text>
                   <Text style={[styles.summaryValue, { color: calculations.netProfitLoss >= 0 ? colors.profit : colors.loss }]}>
@@ -320,13 +334,13 @@ export default function AddMonthScreen() {
           <View style={[styles.card, { backgroundColor: themeColors.card }]}>
             <Text style={[styles.cardTitle, { color: themeColors.text }]}>Notes</Text>
             <TextInput
-              style={[styles.textArea, { color: themeColors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}
+              style={[styles.textArea, { backgroundColor: themeColors.inputBg, color: themeColors.text }]}
               value={notes}
               onChangeText={setNotes}
               placeholder="Add any notes about this month..."
               placeholderTextColor={themeColors.textMuted}
               multiline
-              numberOfLines={3}
+              numberOfLines={4}
               textAlignVertical="top"
             />
           </View>
@@ -335,7 +349,7 @@ export default function AddMonthScreen() {
         </ScrollView>
         
         {/* Save Button */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: themeColors.bg, borderTopColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
           <TouchableOpacity 
             style={[styles.saveButton, isSubmitting && styles.saveButtonDisabled]}
             onPress={handleSave}
@@ -344,7 +358,7 @@ export default function AddMonthScreen() {
             <Text style={styles.saveButtonText}>
               {isSubmitting ? 'Saving...' : 'Save Month'}
             </Text>
-            {!isSubmitting && <Ionicons name="checkmark" size={20} color={colors.white} />}
+            {!isSubmitting && <Ionicons name="checkmark" size={20} color="white" />}
           </TouchableOpacity>
         </View>
         
@@ -367,49 +381,51 @@ const styles = StyleSheet.create({
   flex1: {
     flex: 1,
   },
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
+    borderRadius: 20,
   },
   headerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
   headerSpacer: {
     width: 40,
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 8,
+    paddingBottom: 100,
   },
   card: {
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 16,
-    opacity: 0.7,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   monthSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   monthSelectorLeft: {
     flexDirection: 'row',
@@ -417,61 +433,85 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   monthLabel: {
-    fontFamily: fonts.regular,
     fontSize: 12,
     marginBottom: 2,
+    fontFamily: fonts.regular,
   },
   monthValue: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontWeight: '600',
+    fontFamily: fonts.semiBold,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+    fontFamily: fonts.semiBold,
   },
   inputRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   inputLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    marginBottom: 8,
+    gap: 8,
   },
   inputLabel: {
-    fontFamily: fonts.medium,
     fontSize: 14,
+    marginBottom: 8,
+    fontFamily: fonts.medium,
   },
   inputField: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 140,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    minHeight: 56,
+    borderWidth: 1,
+  },
+  inputError: {
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
   },
   currencySymbol: {
+    fontSize: 20,
+    marginRight: 8,
+    fontWeight: '500',
     fontFamily: fonts.medium,
-    fontSize: 16,
-    marginRight: 4,
   },
   input: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
     flex: 1,
-    textAlign: 'right',
+    fontSize: 20,
+    fontWeight: '500',
+    padding: 0,
+    fontFamily: fonts.medium,
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    justifyContent: 'flex-end',
+  },
+  errorText: {
+    fontSize: 12,
+    color: colors.loss,
+    fontWeight: '500',
+    fontFamily: fonts.medium,
   },
   summaryCard: {
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 95, 0.2)',
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -480,54 +520,65 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   summaryTitle: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
   summaryGrid: {
     flexDirection: 'row',
     gap: 20,
+    borderRadius: 12,
+    padding: 16,
   },
   summaryItem: {
     flex: 1,
   },
   summaryLabel: {
-    fontFamily: fonts.regular,
     fontSize: 12,
     marginBottom: 4,
+    fontFamily: fonts.regular,
   },
   summaryValue: {
+    fontSize: 20,
+    fontWeight: '700',
     fontFamily: fonts.bold,
-    fontSize: 24,
   },
   textArea: {
-    fontFamily: fonts.regular,
-    padding: 14,
     borderRadius: 12,
-    minHeight: 80,
-    fontSize: 14,
+    padding: 12,
+    minHeight: 100,
+    fontSize: 15,
+    fontFamily: fonts.medium,
   },
   spacer: {
-    height: 20,
+    height: 40,
   },
   footer: {
     padding: 20,
-    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 20,
+    borderTopWidth: 1,
   },
   saveButton: {
+    flexDirection: 'row',
     backgroundColor: colors.primary,
     borderRadius: 16,
-    paddingVertical: 18,
-    flexDirection: 'row',
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
   saveButtonText: {
-    fontFamily: fonts.bold,
-    color: colors.white,
+    color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 });

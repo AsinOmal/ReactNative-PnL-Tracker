@@ -85,3 +85,20 @@ export async function monthExistsInFirestore(userId: string, monthKey: string): 
   const months = await getMonths(userId);
   return months.some(m => m.month === monthKey);
 }
+
+// User Profile (for Goals)
+export async function saveUserProfile(userId: string, data: any): Promise<void> {
+    const userRef = doc(db, 'users', userId);
+    await setDoc(userRef, data, { merge: true });
+}
+
+export function subscribeToUserProfile(userId: string, callback: (data: any) => void): Unsubscribe {
+    const userRef = doc(db, 'users', userId);
+    return onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+            callback(doc.data());
+        } else {
+            callback(null);
+        }
+    });
+}

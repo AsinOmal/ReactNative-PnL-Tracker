@@ -25,8 +25,10 @@ const getGreeting = () => {
   return 'Good evening';
 };
 
-// Get user's first name from email
-const getFirstName = (email: string | undefined) => {
+// Get user's display name with fallback to email-based name
+const getUserName = (displayName: string | undefined, email: string | null | undefined) => {
+  // Priority: displayName > email-based name > "Trader"
+  if (displayName && displayName.trim()) return displayName;
   if (!email) return 'Trader';
   const name = email.split('@')[0];
   return name.charAt(0).toUpperCase() + name.slice(1);
@@ -216,7 +218,7 @@ const StreakModal = ({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { months, stats, isLoading, loadMonths, getRecentMonths } = useTrading();
+  const { months, stats, isLoading, loadMonths, getRecentMonths, displayName } = useTrading();
   const { isDark } = useTheme();
   const { user } = useAuth();
   const { togglePrivacyMode } = usePrivacy();
@@ -276,7 +278,7 @@ export default function HomeScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16) }}>
           <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted }}>{getGreeting()}</Text>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getFirstName(user?.email || undefined)}</Text>
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getUserName(displayName, user?.email)}</Text>
         </View>
         <EmptyState
           title="Start Tracking"
@@ -311,7 +313,7 @@ export default function HomeScreen() {
         {/* Header - Personalized Greeting */}
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(20) }}>
           <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted }}>{getGreeting()}</Text>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getFirstName(user?.email || undefined)} 👋</Text>
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getUserName(displayName, user?.email)} 👋</Text>
         </View>
         
         {/* Hero P&L Card */}
@@ -424,24 +426,53 @@ export default function HomeScreen() {
         ) : (
           <View style={{ paddingHorizontal: scale(20), marginBottom: scale(24) }}>
             <TouchableOpacity 
-              style={{ 
-                borderRadius: scale(16), 
-                padding: scale(20), 
-                flexDirection: 'row', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                borderWidth: 2, 
-                borderStyle: 'dashed',
-                backgroundColor: themeColors.card,
-                borderColor: themeColors.primary,
-                gap: scale(8),
-              }}
+              activeOpacity={0.9}
               onPress={() => router.push('/add-month')}
             >
-              <Ionicons name="add-circle-outline" size={scale(24)} color={themeColors.primary} />
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: themeColors.primary }}>
-                Add {formatMonthDisplay(currentMonthKey)} Data
-              </Text>
+              <LinearGradient
+                colors={isDark ? ['rgba(16, 185, 95, 0.1)', 'rgba(16, 185, 95, 0.05)'] : ['rgba(16, 185, 95, 0.12)', 'rgba(16, 185, 95, 0.05)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ 
+                  borderRadius: scale(20), 
+                  padding: scale(2),
+                  borderWidth: 1,
+                  borderColor: 'rgba(16, 185, 95, 0.2)',
+                  borderStyle: 'dashed'
+                }}
+              >
+                  <View style={{ 
+                      flexDirection: 'row', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      padding: scale(18),
+                      gap: scale(12)
+                  }}>
+                    <View style={{ 
+                        width: scale(40), 
+                        height: scale(40), 
+                        borderRadius: scale(20), 
+                        backgroundColor: '#10B95F', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        shadowColor: "#10B95F",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 8,
+                        elevation: 4
+                    }}>
+                        <Ionicons name="add" size={scale(24)} color="#FFFFFF" />
+                    </View>
+                    <View>
+                        <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: themeColors.text }}>
+                            Add {formatMonthDisplay(currentMonthKey)} Data
+                        </Text>
+                        <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>
+                            Track your performance
+                        </Text>
+                    </View>
+                  </View>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         )}

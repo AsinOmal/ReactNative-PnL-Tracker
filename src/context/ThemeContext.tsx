@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme } from 'nativewind';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -16,37 +17,57 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = '@app_theme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const { colorScheme, setColorScheme } = useColorScheme();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [theme, setThemeState] = useState<Theme>('dark');
   
   // Load saved theme on mount
   useEffect(() => {
     loadTheme();
   }, []);
   
+  // Sync state whenever colorScheme changes externally/internally
+  useEffect(() => {
+     if (colorScheme === 'dark' || colorScheme === 'light') {
+         if (theme !== colorScheme) {
+             setThemeState(colorScheme);
+         }
+     }
+  }, [colorScheme]);
+  
   const loadTheme = async () => {
     try {
       const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
       if (savedTheme === 'light' || savedTheme === 'dark') {
         setThemeState(savedTheme);
+        setColorScheme(savedTheme);
+      } else {
+        // Default to dark
+        setThemeState('dark');
+        setColorScheme('dark');
       }
     } catch (error) {
       console.error('Error loading theme:', error);
+      setColorScheme('dark');
+      setThemeState('dark');
     } finally {
       setIsLoaded(true);
     }
   };
   
-  const setTheme = async (newTheme: Theme) => {
-    try {
-      await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
-      setThemeState(newTheme);
-    } catch (error) {
+  const setTheme = (newTheme: Theme) => {
+    // Update state immediately for instant UI response
+    setThemeState(newTheme);
+    setColorScheme(newTheme);
+    
+    // Save to storage asynchronously (fire and forget)
+    AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme).catch((error) => {
       console.error('Error saving theme:', error);
-    }
+    });
   };
   
   const toggleTheme = () => {
+    // Toggle based on current state
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
   };
@@ -81,4 +102,5 @@ export function useTheme(): ThemeContextType {
   }
   return context;
 }
+
 

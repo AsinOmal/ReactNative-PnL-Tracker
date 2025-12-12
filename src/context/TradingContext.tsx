@@ -1,11 +1,11 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { calculateOverallStats, getRecentMonths } from '../services/calculationService';
 import {
-  deleteMonthFromFirestore,
-  getMonths,
-  monthExistsInFirestore,
-  saveMonth as saveMonthToFirestore,
-  subscribeToMonths,
+    deleteMonthFromFirestore,
+    getMonths,
+    monthExistsInFirestore,
+    saveMonth as saveMonthToFirestore,
+    subscribeToMonths,
 } from '../services/firestoreService';
 import { generateAndSharePDF } from '../services/pdfService';
 import { MonthRecord, OverallStats } from '../types';
@@ -29,6 +29,10 @@ interface TradingContextType {
   getMonthById: (id: string) => MonthRecord | undefined;
   getRecentMonths: (limit?: number) => MonthRecord[];
   monthExists: (monthKey: string) => Promise<boolean>;
+  yearlyGoal: number;
+  setYearlyGoal: (goal: number) => Promise<void>;
+  displayName: string;
+  setDisplayName: (name: string) => Promise<void>;
 }
 
 const TradingContext = createContext<TradingContextType | undefined>(undefined);
@@ -60,7 +64,39 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     });
     
     return () => unsubscribe();
+    return () => unsubscribe();
   }, [isAuthenticated, user]);
+
+  const [yearlyGoal, setUserYearlyGoal] = useState<number>(0);
+  const [displayName, setUserDisplayName] = useState<string>('');
+
+  // Subscribe to user profile
+  useEffect(() => {
+      if (!isAuthenticated || !user) return;
+      
+      const { subscribeToUserProfile } = require('../services/firestoreService');
+      const unsubscribe = subscribeToUserProfile(user.uid, (data: any) => {
+          if (data) {
+              if (data.yearlyGoal) setUserYearlyGoal(data.yearlyGoal);
+              if (data.displayName !== undefined) setUserDisplayName(data.displayName);
+          }
+      });
+      return () => unsubscribe();
+  }, [isAuthenticated, user]);
+
+  const setYearlyGoal = useCallback(async (goal: number) => {
+      if (!user) return;
+      const { saveUserProfile } = require('../services/firestoreService');
+      await saveUserProfile(user.uid, { yearlyGoal: goal });
+      setUserYearlyGoal(goal); // optimistic
+  }, [user]);
+
+  const setDisplayName = useCallback(async (name: string) => {
+      if (!user) return;
+      const { saveUserProfile } = require('../services/firestoreService');
+      setUserDisplayName(name); // optimistic update
+      await saveUserProfile(user.uid, { displayName: name });
+  }, [user]);
   
   const loadMonths = useCallback(async () => {
     if (!user) return;
@@ -193,6 +229,10 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     getMonthById: getMonthByIdAction,
     getRecentMonths: getRecentMonthsAction,
     monthExists: monthExistsAction,
+    yearlyGoal,
+    setYearlyGoal,
+    displayName,
+    setDisplayName,
   };
   
   return (
