@@ -275,9 +275,12 @@ export default function AnalyticsScreen() {
                         {(yearlyGoal || 0) > 0 ? (
                             <>
                                 <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: scale(4), marginBottom: scale(12) }}>
-                                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(32), color: themeColors.text }}>
-                                        {formatCurrency(stats.totalProfitLoss)}
-                                    </Text>
+                                    <PrivacyAwareText 
+                                        value={stats.totalProfitLoss} 
+                                        format={formatCurrency} 
+                                        style={{ fontFamily: fonts.bold, fontSize: fontScale(32), color: themeColors.text }} 
+                                        maskedValue="••••••"
+                                    />
                                     <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted, marginBottom: scale(4) }}>
                                         / {formatCurrency(yearlyGoal || 0)}
                                     </Text>
@@ -328,9 +331,12 @@ export default function AnalyticsScreen() {
                       <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: themeColors.textMuted, marginTop: scale(2) }}>Last {sortedMonths.length} months</Text>
                     </View>
                     <View style={{ backgroundColor: cumulativeData[cumulativeData.length - 1] >= 0 ? 'rgba(16, 185, 95, 0.1)' : 'rgba(239, 68, 68, 0.1)', paddingHorizontal: scale(10), paddingVertical: scale(6), borderRadius: scale(8) }}>
-                      <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: cumulativeData[cumulativeData.length - 1] >= 0 ? colors.profit : colors.loss }}>
-                        {formatCurrency(cumulativeData[cumulativeData.length - 1] || 0)}
-                      </Text>
+                      <PrivacyAwareText 
+                        value={cumulativeData[cumulativeData.length - 1] || 0} 
+                        format={formatCurrency} 
+                        style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: cumulativeData[cumulativeData.length - 1] >= 0 ? colors.profit : colors.loss }} 
+                        maskedValue="••••"
+                      />
                     </View>
                   </View>
                   <LineChart
@@ -443,11 +449,11 @@ export default function AnalyticsScreen() {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: scale(16) }}>
                    <View style={{ flex: 1 }}>
                      <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>Avg Win</Text>
-                     <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.profit, marginTop: scale(4) }}>{formatCurrency(stats.averageWin || 0)}</Text>
+                     <PrivacyAwareText value={stats.averageWin || 0} format={formatCurrency} style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.profit, marginTop: scale(4) }} maskedValue="••••" />
                    </View>
                    <View style={{ flex: 1 }}>
                      <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>Avg Loss</Text>
-                     <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.loss, marginTop: scale(4) }}>{formatCurrency(stats.averageLoss || 0)}</Text>
+                     <PrivacyAwareText value={stats.averageLoss || 0} format={formatCurrency} style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.loss, marginTop: scale(4) }} maskedValue="••••" />
                    </View>
                 </View>
 
@@ -491,7 +497,7 @@ export default function AnalyticsScreen() {
                       <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text }}>{formatMonthDisplay(bestMonth.month)}</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.profit }}>{formatCurrency(bestMonth.netProfitLoss)}</Text>
+                      <PrivacyAwareText value={bestMonth.netProfitLoss} format={formatCurrency} style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.profit }} maskedValue="••••" />
                       <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted }}>+{bestMonth.returnPercentage.toFixed(1)}%</Text>
                     </View>
                   </View>
@@ -512,7 +518,7 @@ export default function AnalyticsScreen() {
                       <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text }}>{formatMonthDisplay(worstMonth.month)}</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.loss }}>{formatCurrency(worstMonth.netProfitLoss)}</Text>
+                      <PrivacyAwareText value={worstMonth.netProfitLoss} format={formatCurrency} style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: colors.loss }} maskedValue="••••" />
                       <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted }}>{worstMonth.returnPercentage.toFixed(1)}%</Text>
                     </View>
                   </View>

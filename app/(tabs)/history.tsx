@@ -6,7 +6,9 @@ import { Alert, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'r
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../src/components/EmptyState';
+import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
 import { fonts } from '../../src/config/fonts';
+import { usePrivacy } from '../../src/context/PrivacyContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import { formatMonthDisplay, sortMonthsDesc } from '../../src/utils/dateUtils';
@@ -18,6 +20,7 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { months, deleteMonth, loadMonths } = useTrading();
   const { isDark } = useTheme();
+  const { isPrivacyMode } = usePrivacy();
   const [filter, setFilter] = useState<FilterType>('all');
   const [refreshing, setRefreshing] = useState(false);
   
@@ -176,7 +179,7 @@ export default function HistoryScreen() {
             </View>
             <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.profit : '#FFFFFF' }}>Total Gain</Text>
           </View>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.profit : '#FFFFFF' }} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(totalProfit)}</Text>
+          <PrivacyAwareText value={totalProfit} format={(val) => formatCurrency(val)} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.profit : '#FFFFFF' }} maskedValue="••••••" />
           <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{profitCount} winning months</Text>
         </LinearGradient>
         
@@ -192,7 +195,7 @@ export default function HistoryScreen() {
             </View>
             <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.loss : '#FFFFFF' }}>Total Loss</Text>
           </View>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.loss : '#FFFFFF' }} numberOfLines={1} adjustsFontSizeToFit>-{formatCurrency(totalLoss)}</Text>
+          <PrivacyAwareText value={totalLoss} format={(val) => `-${formatCurrency(val)}`} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.loss : '#FFFFFF' }} maskedValue="-••••••" />
           <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{lossCount} losing months</Text>
         </LinearGradient>
       </View>
@@ -300,9 +303,12 @@ export default function HistoryScreen() {
                       
                       {/* P&L Amount with Return % below */}
                       <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(17), color: month.netProfitLoss >= 0 ? colors.profit : colors.loss }}>
-                          {month.netProfitLoss >= 0 ? '+' : ''}{formatCurrency(month.netProfitLoss)}
-                        </Text>
+                        <PrivacyAwareText 
+                          value={month.netProfitLoss} 
+                          format={(val: number) => `${val >= 0 ? '+' : ''}${formatCurrency(val)}`} 
+                          style={{ fontFamily: fonts.bold, fontSize: fontScale(17), color: month.netProfitLoss >= 0 ? colors.profit : colors.loss }} 
+                          maskedValue="••••••"
+                        />
                         <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted, marginTop: scale(2) }}>
                           {month.returnPercentage >= 0 ? '+' : ''}{month.returnPercentage.toFixed(1)}%
                         </Text>

@@ -51,29 +51,77 @@ export async function areNotificationsEnabled(): Promise<boolean> {
   return status === 'granted';
 }
 
+// Reminder settings interface
+export interface ReminderSettings {
+  day: number; // 1-28
+  hour: number; // 0-23
+  minute: number; // 0-59
+  enabled: boolean;
+}
+
+const REMINDER_SETTINGS_KEY = '@tradex_reminder_settings';
+
+// Default settings
+const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
+  day: 28,
+  hour: 10,
+  minute: 0,
+  enabled: false,
+};
+
 /**
- * Schedule end-of-month reminder
- * Reminds user on the 28th of each month at 10 AM to log their trading results
+ * Save reminder settings to storage
  */
-export async function scheduleEndOfMonthReminder(): Promise<string | null> {
+export async function saveReminderSettings(settings: ReminderSettings): Promise<void> {
+  await AsyncStorage.setItem(REMINDER_SETTINGS_KEY, JSON.stringify(settings));
+  
+  if (settings.enabled) {
+    await scheduleEndOfMonthReminder(settings);
+  } else {
+    await cancelEndOfMonthReminder();
+  }
+}
+
+/**
+ * Load reminder settings from storage
+ */
+export async function loadReminderSettings(): Promise<ReminderSettings> {
+  try {
+    const stored = await AsyncStorage.getItem(REMINDER_SETTINGS_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Failed to load reminder settings', error);
+  }
+  return DEFAULT_REMINDER_SETTINGS;
+}
+
+/**
+ * Schedule end-of-month reminder with custom settings
+ */
+export async function scheduleEndOfMonthReminder(settings?: ReminderSettings): Promise<string | null> {
   const granted = await areNotificationsEnabled();
   if (!granted) return null;
 
+  // Use provided settings or load from storage
+  const reminderSettings = settings || await loadReminderSettings();
+  
   // Cancel existing end-of-month notification
   await cancelEndOfMonthReminder();
 
   const identifier = await Notifications.scheduleNotificationAsync({
     content: {
-      title: '📊 Time to Log Your Month!',
+      title: 'Time to Log Your Month!',
       body: "The month is ending soon. Don't forget to record your trading results!",
       data: { type: 'end_of_month' },
       sound: true,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.MONTHLY,
-      day: 28,
-      hour: 10,
-      minute: 0,
+      day: reminderSettings.day,
+      hour: reminderSettings.hour,
+      minute: reminderSettings.minute,
     },
   });
 
@@ -105,7 +153,7 @@ export async function scheduleStreakReminder(streakCount: number): Promise<strin
 
   const identifier = await Notifications.scheduleNotificationAsync({
     content: {
-      title: `🔥 ${streakCount}-Month Profit Streak!`,
+      title: `${streakCount}-Month Profit Streak!`,
       body: "Keep your winning streak going! Stay focused on your trading plan.",
       data: { type: 'streak_reminder', streak: streakCount },
       sound: true,
@@ -141,7 +189,7 @@ export async function sendTestNotification(): Promise<void> {
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '✅ Notifications Enabled!',
+      title: 'Notifications Enabled!',
       body: 'You will now receive reminders to log your monthly trading results.',
       sound: true,
     },

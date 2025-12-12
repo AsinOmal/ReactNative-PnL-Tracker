@@ -170,12 +170,12 @@ const StreakModal = ({
               <View style={{ flexDirection: 'row', width: '100%', backgroundColor: 'rgba(0,0,0,0.15)', borderRadius: scale(16), paddingVertical: scale(20), paddingHorizontal: scale(12), marginBottom: scale(20) }}>
                 <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: scale(8) }}>
                   <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: 'rgba(255,255,255,0.75)', marginBottom: scale(6), letterSpacing: 0.5 }}>Total Gains</Text>
-                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: '#FFFFFF' }} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(totalStreakGains, true)}</Text>
+                  <PrivacyAwareText value={totalStreakGains} format={(val) => formatCurrency(val, true)} style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: '#FFFFFF' }} maskedValue="••••••" />
                 </View>
                 <View style={{ width: 1, marginVertical: scale(4), backgroundColor: 'rgba(255,255,255,0.25)' }} />
                 <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: scale(8) }}>
                   <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: 'rgba(255,255,255,0.75)', marginBottom: scale(6), letterSpacing: 0.5 }}>Avg/Month</Text>
-                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: '#FFFFFF' }} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(totalStreakGains / streak, true)}</Text>
+                  <PrivacyAwareText value={totalStreakGains / streak} format={(val) => formatCurrency(val, true)} style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: '#FFFFFF' }} maskedValue="••••••" />
                 </View>
               </View>
               
@@ -202,7 +202,7 @@ const StreakModal = ({
                         <View style={{ flex: 1 }}>
                           <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: '#FFFFFF' }}>{formatMonthDisplay(month.month)}</Text>
                         </View>
-                        <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#047857' }}>+{formatCurrency(month.netProfitLoss)}</Text>
+                        <PrivacyAwareText value={month.netProfitLoss} format={(val) => `+${formatCurrency(val)}`} style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#047857' }} maskedValue="+••••" />
                       </View>
                     </Animated.View>
                   ))}

@@ -1,15 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../../src/config/fonts';
@@ -18,19 +20,21 @@ import { usePrivacy } from '../../src/context/PrivacyContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import {
-  BiometricCapabilities,
-  getBiometricCapabilities,
-  getBiometricName,
-  isBiometricEnabled,
-  setBiometricEnabled,
+    BiometricCapabilities,
+    getBiometricCapabilities,
+    getBiometricName,
+    isBiometricEnabled,
+    setBiometricEnabled,
 } from '../../src/services/biometricService';
 import { generateAndShareCSV } from '../../src/services/csvService';
 import {
-  areNotificationsEnabled,
-  cancelAllNotifications,
-  requestNotificationPermissions,
-  scheduleEndOfMonthReminder,
-  sendTestNotification,
+    areNotificationsEnabled,
+    cancelAllNotifications,
+    loadReminderSettings,
+    ReminderSettings,
+    requestNotificationPermissions,
+    saveReminderSettings,
+    sendTestNotification,
 } from '../../src/services/notificationService';
 import { fontScale, scale } from '../../src/utils/scaling';
 
@@ -52,6 +56,14 @@ export default function SettingsScreen() {
   const [biometric, setBiometric] = useState<BiometricCapabilities | null>(null);
   const [biometricOn, setBiometricOn] = useState(false);
   const [notificationsOn, setNotificationsOn] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [reminderSettings, setReminderSettings] = useState<ReminderSettings>({
+    day: 28,
+    hour: 10,
+    minute: 0,
+    enabled: false,
+  });
   
   useEffect(() => {
     const checkSettings = async () => {
@@ -64,6 +76,10 @@ export default function SettingsScreen() {
       // Check notifications
       const notifEnabled = await areNotificationsEnabled();
       setNotificationsOn(notifEnabled);
+      
+      // Load reminder settings
+      const settings = await loadReminderSettings();
+      setReminderSettings(settings);
     };
     checkSettings();
   }, []);
@@ -73,20 +89,65 @@ export default function SettingsScreen() {
     setBiometricOn(value);
   };
   
-  const handleNotificationToggle = async (value: boolean) => {
-    if (value) {
-      const granted = await requestNotificationPermissions();
-      if (granted) {
-        setNotificationsOn(true);
-        await scheduleEndOfMonthReminder();
-        await sendTestNotification();
-      } else {
-        Alert.alert('Permission Denied', 'Please enable notifications in your device settings.');
+  const openReminderModal = async () => {
+    // Request permission first if not granted
+    const granted = await areNotificationsEnabled();
+    if (!granted) {
+      const newGrant = await requestNotificationPermissions();
+      if (!newGrant) {
+        Alert.alert('Permission Required', 'Please enable notifications in your device settings to use reminders.');
+        return;
       }
-    } else {
-      await cancelAllNotifications();
-      setNotificationsOn(false);
+      setNotificationsOn(true);
     }
+    // If reminders already enabled, show summary view first
+    setIsEditMode(!reminderSettings.enabled);
+    setShowReminderModal(true);
+  };
+  
+  const handleSaveReminder = async (settings: ReminderSettings) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await saveReminderSettings(settings);
+    setReminderSettings(settings);
+    setNotificationsOn(settings.enabled);
+    setShowReminderModal(false);
+    
+    if (settings.enabled) {
+      Alert.alert('Reminder Set!', `You'll be reminded on the ${settings.day}${getDaySuffix(settings.day)} of each month at ${formatTime(settings.hour, settings.minute)}.`);
+    }
+  };
+  
+  const handleDisableReminder = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await cancelAllNotifications();
+    const newSettings = { ...reminderSettings, enabled: false };
+    await saveReminderSettings(newSettings);
+    setReminderSettings(newSettings);
+    setNotificationsOn(false);
+    setShowReminderModal(false);
+  };
+  
+  const handleTestNotification = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await sendTestNotification();
+    Alert.alert('Test Sent!', 'Check your notifications.');
+  };
+  
+  // Helper functions
+  const getDaySuffix = (day: number) => {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+  
+  const formatTime = (hour: number, minute: number) => {
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h = hour % 12 || 12;
+    return `${h}:${minute.toString().padStart(2, '0')} ${ampm}`;
   };
   
   const handleExportCSV = async () => {
@@ -167,15 +228,22 @@ export default function SettingsScreen() {
           <Switch
             value={value as boolean}
             onValueChange={(v) => onPress && onPress()}
-            trackColor={{ false: themeColors.border, true: '#10B95F' }}
+            trackColor={{ false: isDark ? '#3F3F46' : '#D4D4D8', true: '#10B95F' }}
             thumbColor="#FFFFFF"
+            ios_backgroundColor={isDark ? '#3F3F46' : '#D4D4D8'}
           />
         </View>
       )}
       
       {type === 'link' && (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
-          {value && <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted }}>{value}</Text>}
+          {value && value !== 'Off' ? (
+            <View style={{ backgroundColor: 'rgba(16, 185, 95, 0.15)', paddingHorizontal: scale(10), paddingVertical: scale(4), borderRadius: scale(8) }}>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#10B95F' }}>{value}</Text>
+            </View>
+          ) : value === 'Off' ? (
+            <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted }}>{value}</Text>
+          ) : null}
           <Ionicons name="chevron-forward" size={scale(18)} color={themeColors.textMuted} />
         </View>
       )}
@@ -298,11 +366,11 @@ export default function SettingsScreen() {
           <View style={{ marginHorizontal: scale(20), backgroundColor: themeColors.card, borderRadius: scale(16), overflow: 'hidden', borderWidth: 1, borderColor: themeColors.border, justifyContent: 'center' }}>
             <SettingItem 
               icon="notifications" 
-              iconColor="#F59E0B" 
+              iconColor="#10B95F" 
               label="Monthly Reminders" 
-              type="toggle" 
-              value={notificationsOn} 
-              onPress={() => handleNotificationToggle(!notificationsOn)} 
+              type="link" 
+              value={reminderSettings.enabled ? 'On' : 'Off'}
+              onPress={openReminderModal} 
               showBorder={false}
             />
           </View>
@@ -352,6 +420,186 @@ export default function SettingsScreen() {
         {/* Bottom padding */}
         <View style={{ height: scale(80) }} />
       </ScrollView>
+      
+      {/* Reminder Settings Modal */}
+      <Modal
+        visible={showReminderModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowReminderModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: themeColors.card, borderTopLeftRadius: scale(24), borderTopRightRadius: scale(24), paddingBottom: scale(40) }}>
+            {/* Header */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: scale(20), borderBottomWidth: 1, borderBottomColor: themeColors.border }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text }}>
+                {isEditMode ? 'Set Reminder' : 'Monthly Reminders'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowReminderModal(false)} style={{ width: scale(32), height: scale(32), borderRadius: scale(16), backgroundColor: themeColors.border, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="close" size={scale(18)} color={themeColors.text} />
+              </TouchableOpacity>
+            </View>
+            
+            {/* Summary View - when reminders are enabled and not in edit mode */}
+            {reminderSettings.enabled && !isEditMode ? (
+              <View style={{ padding: scale(20) }}>
+                {/* Hero Section */}
+                <View style={{ alignItems: 'center', marginBottom: scale(24) }}>
+                  <LinearGradient
+                    colors={['#10B95F', '#059669']}
+                    style={{ width: scale(72), height: scale(72), borderRadius: scale(20), justifyContent: 'center', alignItems: 'center', marginBottom: scale(16), shadowColor: '#10B95F', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 }}
+                  >
+                    <Ionicons name="notifications" size={scale(32)} color="#FFFFFF" />
+                  </LinearGradient>
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: themeColors.text, marginBottom: scale(4) }}>Reminder Active</Text>
+                  <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: themeColors.textMuted }}>You'll receive a monthly notification</Text>
+                </View>
+                
+                {/* Schedule Card */}
+                <View style={{ backgroundColor: themeColors.border, borderRadius: scale(16), marginBottom: scale(20), overflow: 'hidden' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', padding: scale(16), borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>
+                    <View style={{ width: scale(36), height: scale(36), borderRadius: scale(10), backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', justifyContent: 'center', alignItems: 'center', marginRight: scale(12) }}>
+                      <Ionicons name="calendar-outline" size={scale(18)} color={themeColors.text} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(2) }}>Day</Text>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: themeColors.text }}>{reminderSettings.day}{getDaySuffix(reminderSettings.day)} of each month</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', padding: scale(16) }}>
+                    <View style={{ width: scale(36), height: scale(36), borderRadius: scale(10), backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', justifyContent: 'center', alignItems: 'center', marginRight: scale(12) }}>
+                      <Ionicons name="time-outline" size={scale(18)} color={themeColors.text} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(2) }}>Time</Text>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: themeColors.text }}>{formatTime(reminderSettings.hour, reminderSettings.minute)}</Text>
+                    </View>
+                  </View>
+                </View>
+                
+                {/* Action Buttons */}
+                <View style={{ flexDirection: 'row', gap: scale(10), marginBottom: scale(16) }}>
+                  <TouchableOpacity
+                    onPress={() => setIsEditMode(true)}
+                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(16, 185, 95, 0.15)' : 'rgba(16, 185, 95, 0.1)', borderRadius: scale(12), padding: scale(14), gap: scale(6) }}
+                  >
+                    <Ionicons name="create-outline" size={scale(18)} color="#10B95F" />
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: '#10B95F' }}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleTestNotification}
+                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: themeColors.border, borderRadius: scale(12), padding: scale(14), gap: scale(6) }}
+                  >
+                    <Ionicons name="paper-plane-outline" size={scale(18)} color={themeColors.text} />
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: themeColors.text }}>Test</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Disable Button */}
+                <TouchableOpacity
+                  onPress={handleDisableReminder}
+                  style={{ alignItems: 'center', padding: scale(14), borderRadius: scale(12), backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.08)' }}
+                >
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: '#EF4444' }}>Turn Off Reminders</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              /* Edit Mode */
+              <>
+                {/* Day Picker */}
+                <View style={{ padding: scale(20) }}>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: themeColors.text, marginBottom: scale(12) }}>Day of Month</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={{ flexDirection: 'row', gap: scale(8) }}>
+                      {[1, 5, 10, 15, 20, 25, 30].map((day) => (
+                        <TouchableOpacity
+                          key={day}
+                          onPress={() => setReminderSettings(prev => ({ ...prev, day }))}
+                          style={{
+                            width: scale(48),
+                            height: scale(48),
+                            borderRadius: scale(12),
+                            backgroundColor: reminderSettings.day === day ? '#10B95F' : themeColors.border,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: reminderSettings.day === day ? '#FFFFFF' : themeColors.text }}>{day}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+                
+                {/* Time Picker */}
+                <View style={{ paddingHorizontal: scale(20), paddingBottom: scale(20) }}>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: themeColors.text, marginBottom: scale(12) }}>Time</Text>
+                  <View style={{ flexDirection: 'row', gap: scale(8) }}>
+                    {[
+                      { label: 'Morning', hour: 9 },
+                      { label: 'Midday', hour: 12 },
+                      { label: 'Evening', hour: 18 },
+                      { label: 'Night', hour: 21 },
+                    ].map(({ label, hour }) => (
+                      <TouchableOpacity
+                        key={hour}
+                        onPress={() => setReminderSettings(prev => ({ ...prev, hour, minute: 0 }))}
+                        style={{
+                          flex: 1,
+                          paddingVertical: scale(12),
+                          borderRadius: scale(12),
+                          backgroundColor: reminderSettings.hour === hour ? '#10B95F' : themeColors.border,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: reminderSettings.hour === hour ? '#FFFFFF' : themeColors.text }}>{label}</Text>
+                        <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(10), color: reminderSettings.hour === hour ? 'rgba(255,255,255,0.8)' : themeColors.textMuted }}>{formatTime(hour, 0)}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                
+                {/* Test Notification Button */}
+                <View style={{ paddingHorizontal: scale(20), marginBottom: scale(16) }}>
+                  <TouchableOpacity
+                    onPress={handleTestNotification}
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: themeColors.border, borderRadius: scale(14), padding: scale(16), gap: scale(8) }}
+                  >
+                    <Ionicons name="notifications-outline" size={scale(20)} color={themeColors.text} />
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: themeColors.text }}>Send Test Notification</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Save Button */}
+                <View style={{ paddingHorizontal: scale(20), marginBottom: scale(12) }}>
+                  <TouchableOpacity
+                    onPress={() => handleSaveReminder({ ...reminderSettings, enabled: true })}
+                  >
+                    <LinearGradient
+                      colors={['#10B95F', '#059669']}
+                      style={{ borderRadius: scale(14), padding: scale(16), alignItems: 'center' }}
+                    >
+                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: '#FFFFFF' }}>Save & Enable</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Cancel/Back Button for edit mode when already enabled */}
+                {reminderSettings.enabled && (
+                  <View style={{ paddingHorizontal: scale(20) }}>
+                    <TouchableOpacity
+                      onPress={() => setIsEditMode(false)}
+                      style={{ alignItems: 'center', padding: scale(12) }}
+                    >
+                      <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: themeColors.textMuted }}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
