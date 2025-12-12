@@ -164,23 +164,37 @@ export default function HistoryScreen() {
       
       {/* Stats Cards */}
       <View style={{ flexDirection: 'row', paddingHorizontal: scale(20), gap: scale(12), marginBottom: scale(16) }}>
-        <View style={{ flex: 1, backgroundColor: colors.profitLight, borderRadius: scale(16), padding: scale(16) }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(8) }}>
-            <Ionicons name="trending-up" size={scale(18)} color={colors.profit} />
-            <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: colors.profit }}>Total Gain</Text>
+        <LinearGradient
+          colors={isDark ? ['#0D3D2B', '#0A2E21'] : ['#10B95F', '#059669']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ flex: 1, borderRadius: scale(20), padding: scale(20) }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(12) }}>
+            <View style={{ width: scale(32), height: scale(32), borderRadius: scale(10), backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="trending-up" size={scale(18)} color="#FFFFFF" />
+            </View>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.profit : '#FFFFFF' }}>Total Gain</Text>
           </View>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: colors.profit }}>{formatCurrency(totalProfit)}</Text>
-          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted, marginTop: scale(4) }}>{profitCount} months</Text>
-        </View>
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.profit : '#FFFFFF' }} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(totalProfit)}</Text>
+          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{profitCount} winning months</Text>
+        </LinearGradient>
         
-        <View style={{ flex: 1, backgroundColor: colors.lossLight, borderRadius: scale(16), padding: scale(16) }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(8) }}>
-            <Ionicons name="trending-down" size={scale(18)} color={colors.loss} />
-            <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: colors.loss }}>Total Loss</Text>
+        <LinearGradient
+          colors={isDark ? ['#3D1A1A', '#2E1414'] : ['#EF4444', '#DC2626']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ flex: 1, borderRadius: scale(20), padding: scale(20) }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(12) }}>
+            <View style={{ width: scale(32), height: scale(32), borderRadius: scale(10), backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="trending-down" size={scale(18)} color="#FFFFFF" />
+            </View>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.loss : '#FFFFFF' }}>Total Loss</Text>
           </View>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: colors.loss }}>-{formatCurrency(totalLoss)}</Text>
-          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted, marginTop: scale(4) }}>{lossCount} months</Text>
-        </View>
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.loss : '#FFFFFF' }} numberOfLines={1} adjustsFontSizeToFit>-{formatCurrency(totalLoss)}</Text>
+          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{lossCount} losing months</Text>
+        </LinearGradient>
       </View>
       
       {/* Filter Tabs */}
@@ -196,7 +210,7 @@ export default function HistoryScreen() {
           message="Your monthly trading records will appear here"
           actionLabel="Add First Month"
           onAction={() => router.push('/add-month')}
-          icon="📅"
+          icon="calendar"
         />
       ) : (
         /* Months List Grouped by Year */
@@ -235,53 +249,67 @@ export default function HistoryScreen() {
                 >
                   <TouchableOpacity
                     onPress={() => router.push(`/month-details/${month.id}`)}
-                    activeOpacity={0.7}
+                    activeOpacity={0.8}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      backgroundColor: themeColors.card,
                       marginHorizontal: scale(20),
                       marginBottom: scale(10),
-                      padding: scale(16),
                       borderRadius: scale(16),
+                      backgroundColor: themeColors.card,
+                      padding: scale(16),
                       borderWidth: 1,
                       borderColor: themeColors.border,
                     }}
                   >
-                    {/* Month Icon */}
-                    <LinearGradient
-                      colors={month.netProfitLoss >= 0 ? ['#10B95F', '#059669'] : ['#EF4444', '#DC2626']}
-                      style={{ width: scale(44), height: scale(44), borderRadius: scale(12), justifyContent: 'center', alignItems: 'center', marginRight: scale(14) }}
-                    >
-                      <Ionicons 
-                        name={month.netProfitLoss >= 0 ? 'arrow-up' : 'arrow-down'} 
-                        size={scale(22)} 
-                        color="#FFFFFF" 
-                      />
-                    </LinearGradient>
-                    
-                    {/* Month Details */}
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text }}>
-                        {formatMonthDisplay(month.month)}
-                      </Text>
-                      <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: themeColors.textMuted, marginTop: scale(2) }}>
-                        {month.status === 'closed' ? 'Closed' : 'Active'}
-                      </Text>
-                    </View>
-                    
-                    {/* P&L */}
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(17), color: month.netProfitLoss >= 0 ? colors.profit : colors.loss }}>
-                        {month.netProfitLoss >= 0 ? '+' : ''}{formatCurrency(month.netProfitLoss)}
-                      </Text>
-                      <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted, marginTop: scale(2) }}>
-                        {month.returnPercentage >= 0 ? '+' : ''}{month.returnPercentage.toFixed(1)}%
-                      </Text>
-                    </View>
-                    
-                    {/* Arrow */}
-                    <Ionicons name="chevron-forward" size={scale(18)} color={themeColors.textMuted} style={{ marginLeft: scale(8) }} />
+                      {/* Profit/Loss Icon */}
+                      <View style={{ 
+                        width: scale(40), 
+                        height: scale(40), 
+                        borderRadius: scale(12), 
+                        backgroundColor: month.netProfitLoss >= 0 ? 'rgba(16, 185, 95, 0.2)' : 'rgba(239, 68, 68, 0.2)', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        marginRight: scale(14) 
+                      }}>
+                        <Ionicons 
+                          name={month.netProfitLoss >= 0 ? 'trending-up' : 'trending-down'} 
+                          size={scale(20)} 
+                          color={month.netProfitLoss >= 0 ? colors.profit : colors.loss} 
+                        />
+                      </View>
+                      
+                      {/* Month Details */}
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text }}>
+                          {formatMonthDisplay(month.month)}
+                        </Text>
+                        <View style={{ 
+                          marginTop: scale(4),
+                          paddingHorizontal: scale(6), 
+                          paddingVertical: scale(2), 
+                          borderRadius: scale(4), 
+                          backgroundColor: month.status === 'closed' ? '#4F46E5' : '#F59E0B',
+                          alignSelf: 'flex-start'
+                        }}>
+                          <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(9), color: '#FFFFFF' }}>
+                            {month.status === 'closed' ? 'Closed' : 'Active'}
+                          </Text>
+                        </View>
+                      </View>
+                      
+                      {/* P&L Amount with Return % below */}
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(17), color: month.netProfitLoss >= 0 ? colors.profit : colors.loss }}>
+                          {month.netProfitLoss >= 0 ? '+' : ''}{formatCurrency(month.netProfitLoss)}
+                        </Text>
+                        <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted, marginTop: scale(2) }}>
+                          {month.returnPercentage >= 0 ? '+' : ''}{month.returnPercentage.toFixed(1)}%
+                        </Text>
+                      </View>
+                      
+                      {/* Arrow */}
+                      <Ionicons name="chevron-forward" size={scale(18)} color={themeColors.textMuted} style={{ marginLeft: scale(10) }} />
                   </TouchableOpacity>
                 </Swipeable>
               ))}

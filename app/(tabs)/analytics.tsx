@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MilestoneCelebration } from '../../src/components/MilestoneCelebration';
 import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
 import { fonts } from '../../src/config/fonts';
 import { usePrivacy } from '../../src/context/PrivacyContext';
@@ -17,12 +19,42 @@ export default function AnalyticsScreen() {
   const router = useRouter();
   const { isDark } = useTheme();
   const { months, stats, loadMonths, yearlyGoal, setYearlyGoal } = useTrading();
-  const { togglePrivacyMode, isPrivacyMode } = usePrivacy(); // Use for charts
+  const { togglePrivacyMode, isPrivacyMode } = usePrivacy();
   const [refreshing, setRefreshing] = useState(false);
   const [tooltip, setTooltip] = useState<{ x: number, y: number, value: number, index: number } | null>(null);
   
   const [showGoalInput, setShowGoalInput] = useState(false);
   const [tempGoal, setTempGoal] = useState('');
+  
+  // Milestone celebration state
+  const [showMilestone, setShowMilestone] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState<25 | 50 | 75 | 100>(25);
+  
+  // Check for milestone celebrations
+  useEffect(() => {
+    const checkMilestone = async () => {
+      if (!yearlyGoal || yearlyGoal <= 0) return;
+      
+      const progress = stats.totalProfitLoss / yearlyGoal;
+      const milestones: (25 | 50 | 75 | 100)[] = [100, 75, 50, 25]; // Check highest first
+      
+      for (const milestone of milestones) {
+        const threshold = milestone / 100;
+        if (progress >= threshold) {
+          const key = `milestone_${milestone}_${yearlyGoal}`;
+          const celebrated = await AsyncStorage.getItem(key);
+          if (!celebrated) {
+            await AsyncStorage.setItem(key, 'true');
+            setCurrentMilestone(milestone);
+            setShowMilestone(true);
+          }
+          break; // Only show highest uncelebrated milestone
+        }
+      }
+    };
+    
+    checkMilestone();
+  }, [stats.totalProfitLoss, yearlyGoal]);
 
   const handleSaveGoal = async () => {
       const num = parseFloat(tempGoal.replace(/[^0-9.]/g, ''));
@@ -229,7 +261,7 @@ export default function AnalyticsScreen() {
                                     <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#6366F1', textTransform: 'uppercase', letterSpacing: 0.5 }}>Yearly Target</Text>
                                 </View>
                                 <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>
-                                    {stats.totalProfitLoss >= (yearlyGoal || 0) && (yearlyGoal || 0) > 0 ? "🎉 Goal Achieved!" : "Keep pushing!"}
+                                    {stats.totalProfitLoss >= (yearlyGoal || 0) && (yearlyGoal || 0) > 0 ? "Goal Achieved!" : "Keep pushing!"}
                                 </Text>
                             </View>
                             {(yearlyGoal || 0) > 0 && (
@@ -540,6 +572,14 @@ export default function AnalyticsScreen() {
             </View>
         </TouchableWithoutFeedback>
       </Modal>
+      
+      {/* Milestone Celebration Modal */}
+      <MilestoneCelebration
+        visible={showMilestone}
+        milestone={currentMilestone}
+        onClose={() => setShowMilestone(false)}
+        isDark={isDark}
+      />
     </SafeAreaView>
   );
 }

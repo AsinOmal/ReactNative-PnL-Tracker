@@ -3,13 +3,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../../src/config/fonts';
@@ -18,13 +18,20 @@ import { usePrivacy } from '../../src/context/PrivacyContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import {
-    BiometricCapabilities,
-    getBiometricCapabilities,
-    getBiometricName,
-    isBiometricEnabled,
-    setBiometricEnabled,
+  BiometricCapabilities,
+  getBiometricCapabilities,
+  getBiometricName,
+  isBiometricEnabled,
+  setBiometricEnabled,
 } from '../../src/services/biometricService';
 import { generateAndShareCSV } from '../../src/services/csvService';
+import {
+  areNotificationsEnabled,
+  cancelAllNotifications,
+  requestNotificationPermissions,
+  scheduleEndOfMonthReminder,
+  sendTestNotification,
+} from '../../src/services/notificationService';
 import { fontScale, scale } from '../../src/utils/scaling';
 
 export default function SettingsScreen() {
@@ -44,20 +51,42 @@ export default function SettingsScreen() {
   
   const [biometric, setBiometric] = useState<BiometricCapabilities | null>(null);
   const [biometricOn, setBiometricOn] = useState(false);
+  const [notificationsOn, setNotificationsOn] = useState(false);
   
   useEffect(() => {
-    const checkBiometric = async () => {
+    const checkSettings = async () => {
+      // Check biometric
       const caps = await getBiometricCapabilities();
       setBiometric(caps);
-      const enabled = await isBiometricEnabled();
-      setBiometricOn(enabled);
+      const biometricEnabled = await isBiometricEnabled();
+      setBiometricOn(biometricEnabled);
+      
+      // Check notifications
+      const notifEnabled = await areNotificationsEnabled();
+      setNotificationsOn(notifEnabled);
     };
-    checkBiometric();
+    checkSettings();
   }, []);
   
   const handleBiometricToggle = async (value: boolean) => {
     await setBiometricEnabled(value);
     setBiometricOn(value);
+  };
+  
+  const handleNotificationToggle = async (value: boolean) => {
+    if (value) {
+      const granted = await requestNotificationPermissions();
+      if (granted) {
+        setNotificationsOn(true);
+        await scheduleEndOfMonthReminder();
+        await sendTestNotification();
+      } else {
+        Alert.alert('Permission Denied', 'Please enable notifications in your device settings.');
+      }
+    } else {
+      await cancelAllNotifications();
+      setNotificationsOn(false);
+    }
   };
   
   const handleExportCSV = async () => {
@@ -118,28 +147,30 @@ export default function SettingsScreen() {
       activeOpacity={type === 'toggle' ? 1 : 0.7}
       style={{ 
         flexDirection: 'row', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
+        alignItems: 'center',
+        justifyContent: 'space-between',
         paddingVertical: scale(16),
         paddingHorizontal: scale(16),
         borderBottomWidth: showBorder ? 1 : 0,
         borderBottomColor: themeColors.border,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(14) }}>
-        <View style={{ width: scale(36), height: scale(36), borderRadius: scale(10), backgroundColor: type === 'action' && iconColor === '#EF4444' ? 'rgba(239, 68, 68, 0.1)' : themeColors.iconBg, justifyContent: 'center', alignItems: 'center' }}>
-          <Ionicons name={icon} size={scale(18)} color={iconColor} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(12) }}>
+        <View style={{ width: scale(24), height: scale(24), justifyContent: 'center', alignItems: 'center' }}>
+          <Ionicons name={icon} size={scale(22)} color={iconColor} style={{ opacity: 0.85 }} />
         </View>
         <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: type === 'action' && iconColor === '#EF4444' ? '#EF4444' : themeColors.text }}>{label}</Text>
       </View>
       
       {type === 'toggle' && (
-        <Switch
-          value={value as boolean}
-          onValueChange={(v) => onPress && onPress()}
-          trackColor={{ false: themeColors.border, true: '#10B95F' }}
-          thumbColor="#FFFFFF"
-        />
+        <View style={{ height: scale(36), justifyContent: 'center' }}>
+          <Switch
+            value={value as boolean}
+            onValueChange={(v) => onPress && onPress()}
+            trackColor={{ false: themeColors.border, true: '#10B95F' }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
       )}
       
       {type === 'link' && (
@@ -258,6 +289,22 @@ export default function SettingsScreen() {
                 showBorder={false}
               />
             )}
+          </View>
+        </View>
+
+        {/* Notifications Section */}
+        <View style={{ marginBottom: scale(24) }}>
+          <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginHorizontal: scale(24), marginBottom: scale(8) }}>Notifications</Text>
+          <View style={{ marginHorizontal: scale(20), backgroundColor: themeColors.card, borderRadius: scale(16), overflow: 'hidden', borderWidth: 1, borderColor: themeColors.border, justifyContent: 'center' }}>
+            <SettingItem 
+              icon="notifications" 
+              iconColor="#F59E0B" 
+              label="Monthly Reminders" 
+              type="toggle" 
+              value={notificationsOn} 
+              onPress={() => handleNotificationToggle(!notificationsOn)} 
+              showBorder={false}
+            />
           </View>
         </View>
         

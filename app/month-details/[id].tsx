@@ -1,17 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../../src/config/fonts';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
@@ -188,15 +191,41 @@ export default function MonthDetailsScreen() {
         style={styles.flex1}
       >
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={[styles.backText, { color: colors.primary }]}>←</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 }}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={{ 
+              width: 40, 
+              height: 40, 
+              borderRadius: 20, 
+              backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', 
+              justifyContent: 'center', 
+              alignItems: 'center' 
+            }}
+          >
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
+          <Text style={{ flex: 1, textAlign: 'center', fontSize: 18, fontFamily: fonts.semiBold, color: colors.text }}>
             {formatMonthDisplay(month.month)}
           </Text>
-          <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editButton}>
-            <Text style={[styles.editText, { color: colors.primary }]}>{isEditing ? 'Cancel' : 'Edit'}</Text>
+          <TouchableOpacity 
+            onPress={() => setIsEditing(!isEditing)} 
+            style={{ 
+              paddingHorizontal: 14, 
+              paddingVertical: 8, 
+              borderRadius: 12, 
+              backgroundColor: isEditing 
+                ? (isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)')
+                : (isDark ? 'rgba(16,185,95,0.15)' : 'rgba(16,185,95,0.1)')
+            }}
+          >
+            <Text style={{ 
+              fontFamily: fonts.semiBold, 
+              fontSize: 14, 
+              color: isEditing ? colors.loss : colors.profit 
+            }}>
+              {isEditing ? 'Cancel' : 'Edit'}
+            </Text>
           </TouchableOpacity>
         </View>
         
@@ -321,96 +350,119 @@ export default function MonthDetailsScreen() {
           ) : (
             // View Mode
             <>
-              {/* Capital Summary */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Capital Summary</Text>
-                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Starting</Text>
-                    <Text style={[styles.cardValue, { color: colors.text }]}>
-                      {formatCurrency(month.startingCapital)}
-                    </Text>
-                  </View>
-                  <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Ending</Text>
-                    <Text style={[styles.cardValue, { color: colors.text }]}>
-                      {formatCurrency(month.endingCapital)}
-                    </Text>
-                  </View>
-                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                  <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Change</Text>
-                    <Text style={[styles.cardValue, { color: month.grossChange >= 0 ? colors.profit : colors.loss }]}>
-                      {formatCurrency(month.grossChange, true)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              
-              {/* Cash Flow */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Cash Flow</Text>
-                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Deposits</Text>
-                    <Text style={[styles.cardValue, { color: colors.profit }]}>
-                      +{formatCurrency(month.deposits)}
-                    </Text>
-                  </View>
-                  <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Withdrawals</Text>
-                    <Text style={[styles.cardValue, { color: colors.loss }]}>
-                      -{formatCurrency(month.withdrawals)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              
-              {/* Trading Results */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Trading Results</Text>
-                <View style={[styles.resultsCard, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.5)' : '#F4F4F5' }]}>
-                  <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Net P&L</Text>
-                    <Text style={[styles.resultValue, { color: profitColor }]}>
-                      {formatCurrency(month.netProfitLoss, true)}
-                    </Text>
-                  </View>
-                  <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Return</Text>
-                    <Text style={[styles.resultValue, { color: profitColor }]}>
+              {/* Hero P&L Card */}
+              <LinearGradient
+                colors={month.netProfitLoss >= 0 ? ['#10B95F', '#059669'] : ['#EF4444', '#DC2626']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  borderRadius: 24,
+                  padding: 24,
+                  marginBottom: 24,
+                  shadowColor: month.netProfitLoss >= 0 ? '#10B95F' : '#EF4444',
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 16,
+                  elevation: 8,
+                }}
+              >
+                <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>
+                  Net Profit/Loss
+                </Text>
+                <Text style={{ fontFamily: fonts.bold, fontSize: 36, color: '#FFFFFF', marginBottom: 8 }}>
+                  {formatCurrency(month.netProfitLoss, true)}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: '#FFFFFF' }}>
                       {formatPercentage(month.returnPercentage, true)}
                     </Text>
                   </View>
+                  <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+                    return on capital
+                  </Text>
+                </View>
+              </LinearGradient>
+
+              {/* Capital & Flow Summary */}
+              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(99, 102, 241, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="wallet-outline" size={18} color="#6366F1" />
+                  </View>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Capital</Text>
+                </View>
+                
+                <View style={styles.cardRow}>
+                  <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Starting</Text>
+                  <Text style={[styles.cardValue, { color: colors.text }]}>{formatCurrency(month.startingCapital)}</Text>
+                </View>
+                <View style={styles.cardRow}>
+                  <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Ending</Text>
+                  <Text style={[styles.cardValue, { color: colors.text }]}>{formatCurrency(month.endingCapital)}</Text>
+                </View>
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                <View style={styles.cardRow}>
+                  <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Gross Change</Text>
+                  <Text style={[styles.cardValue, { color: month.grossChange >= 0 ? colors.profit : colors.loss }]}>
+                    {formatCurrency(month.grossChange, true)}
+                  </Text>
                 </View>
               </View>
-              
+
+              {/* Cash Flow Card */}
+              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(16, 185, 95, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="swap-vertical-outline" size={18} color="#10B95F" />
+                  </View>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Cash Flow</Text>
+                </View>
+                
+                <View style={styles.cardRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="arrow-down-circle" size={18} color={colors.profit} />
+                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Deposits</Text>
+                  </View>
+                  <Text style={[styles.cardValue, { color: colors.profit }]}>+{formatCurrency(month.deposits)}</Text>
+                </View>
+                <View style={styles.cardRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="arrow-up-circle" size={18} color={colors.loss} />
+                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Withdrawals</Text>
+                  </View>
+                  <Text style={[styles.cardValue, { color: colors.loss }]}>-{formatCurrency(month.withdrawals)}</Text>
+                </View>
+              </View>
+
               {/* Notes */}
               {month.notes && (
-                <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Notes</Text>
-                  <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.notesText, { color: colors.text }]}>
-                      {month.notes}
-                    </Text>
+                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(251, 191, 36, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons name="document-text-outline" size={18} color="#FBBF24" />
+                    </View>
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Notes</Text>
                   </View>
+                  <Text style={[styles.notesText, { color: colors.text }]}>{month.notes}</Text>
                 </View>
               )}
-              
+
+              {/* Action Buttons */}
               <View style={styles.actionButtons}>
                 <TouchableOpacity 
                   style={styles.pdfButton}
                   onPress={handleGeneratePDF}
                 >
                   <Ionicons name="document-text-outline" size={18} color="#6366F1" />
-                  <Text style={styles.pdfButtonText}>Generate PDF</Text>
+                  <Text style={styles.pdfButtonText}>Export PDF</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
                   style={styles.deleteButton}
                   onPress={handleDelete}
                 >
-                  <Ionicons name="trash" size={18} color="#FFFFFF" />
+                  <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
                   <Text style={styles.deleteButtonText}>Delete</Text>
                 </TouchableOpacity>
               </View>
@@ -424,5 +476,220 @@ export default function MonthDetailsScreen() {
   );
 }
 
-
-
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  flex1: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 16,
+    fontFamily: fonts.medium,
+  },
+  marginTop: {
+    marginTop: 16,
+  },
+  link: {
+    fontSize: 16,
+    fontFamily: fonts.medium,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    padding: 8,
+  },
+  backText: {
+    fontSize: 24,
+    fontFamily: fonts.medium,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: fonts.semiBold,
+  },
+  editButton: {
+    padding: 8,
+  },
+  editText: {
+    fontSize: 16,
+    fontFamily: fonts.medium,
+  },
+  scrollContent: {
+    padding: 20,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    minHeight: 56,
+    borderWidth: 1,
+  },
+  inputPrefix: {
+    fontSize: 20,
+    fontFamily: fonts.medium,
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 20,
+    fontFamily: fonts.medium,
+    padding: 0,
+  },
+  textArea: {
+    borderRadius: 16,
+    padding: 16,
+    minHeight: 100,
+    fontSize: 15,
+    fontFamily: fonts.medium,
+    borderWidth: 1,
+  },
+  preview: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+  },
+  previewTitle: {
+    fontSize: 14,
+    fontFamily: fonts.semiBold,
+    marginBottom: 12,
+  },
+  previewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  previewLabel: {
+    fontSize: 14,
+    fontFamily: fonts.regular,
+  },
+  previewValue: {
+    fontSize: 18,
+    fontFamily: fonts.bold,
+  },
+  saveButton: {
+    backgroundColor: '#10B95F',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10B95F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: fonts.semiBold,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontFamily: fonts.semiBold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  card: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+  },
+  resultsCard: {
+    borderRadius: 16,
+    padding: 16,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  cardLabel: {
+    fontSize: 14,
+    fontFamily: fonts.regular,
+  },
+  cardValue: {
+    fontSize: 16,
+    fontFamily: fonts.semiBold,
+  },
+  resultValue: {
+    fontSize: 20,
+    fontFamily: fonts.bold,
+  },
+  divider: {
+    height: 1,
+    marginVertical: 12,
+  },
+  notesText: {
+    fontSize: 15,
+    fontFamily: fonts.regular,
+    lineHeight: 22,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  pdfButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    borderRadius: 16,
+    paddingVertical: 14,
+  },
+  pdfButtonText: {
+    color: '#6366F1',
+    fontSize: 14,
+    fontFamily: fonts.semiBold,
+  },
+  deleteButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#EF4444',
+    borderRadius: 16,
+    paddingVertical: 14,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: fonts.semiBold,
+  },
+  spacer: {
+    height: 40,
+  },
+});

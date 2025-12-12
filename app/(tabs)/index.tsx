@@ -154,7 +154,7 @@ const StreakModal = ({
               {/* Fire Animation */}
               <Animated.View style={{ transform: [{ rotate: fireRotate }], marginBottom: scale(16) }}>
                 <View style={{ width: scale(100), height: scale(100), borderRadius: scale(50), backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center', shadowColor: '#FF6B00', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 20 }}>
-                  <Text style={{ fontSize: fontScale(56) }}>🔥</Text>
+                  <Ionicons name="flame" size={scale(56)} color="#FF6B00" />
                 </View>
               </Animated.View>
               
@@ -163,7 +163,7 @@ const StreakModal = ({
                 {streak} Month Streak!
               </Text>
               <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: 'rgba(255,255,255,0.85)', textAlign: 'center', marginBottom: scale(24) }}>
-                You're on fire! Keep it up 💪
+                You're on fire! Keep it up!
               </Text>
               
               {/* Stats Row */}
@@ -180,27 +180,38 @@ const StreakModal = ({
               </View>
               
               {/* Streak Months List */}
-              <View style={{ width: '100%', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: scale(16), padding: scale(4) }}>
+              <View style={{ width: '100%', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: scale(16), padding: scale(4), maxHeight: scale(200) }}>
                 <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: 'rgba(255,255,255,0.8)', marginLeft: scale(12), marginTop: scale(12), marginBottom: scale(8) }}>WINNING MONTHS</Text>
-                {streakMonths.map((month, index) => (
-                  <Animated.View 
-                    key={month.id} 
-                    style={{ 
-                      transform: [{ translateY: slideAnim }],
-                      opacity: fadeAnim,
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: scale(12), padding: scale(12), marginHorizontal: scale(8), marginBottom: scale(8) }}>
-                      <View style={{ width: scale(32), height: scale(32), borderRadius: scale(16), backgroundColor: '#10B95F', justifyContent: 'center', alignItems: 'center', marginRight: scale(12) }}>
-                        <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#FFFFFF' }}>{index + 1}</Text>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false} 
+                  nestedScrollEnabled
+                  style={{ maxHeight: scale(150) }}
+                >
+                  {streakMonths.slice(0, 6).map((month, index) => (
+                    <Animated.View 
+                      key={month.id} 
+                      style={{ 
+                        transform: [{ translateY: slideAnim }],
+                        opacity: fadeAnim,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: scale(12), padding: scale(12), marginHorizontal: scale(8), marginBottom: scale(8) }}>
+                        <View style={{ width: scale(28), height: scale(28), borderRadius: scale(14), backgroundColor: '#10B95F', justifyContent: 'center', alignItems: 'center', marginRight: scale(12) }}>
+                          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(12), color: '#FFFFFF' }}>{index + 1}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: '#FFFFFF' }}>{formatMonthDisplay(month.month)}</Text>
+                        </View>
+                        <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#047857' }}>+{formatCurrency(month.netProfitLoss)}</Text>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: '#FFFFFF' }}>{formatMonthDisplay(month.month)}</Text>
-                      </View>
-                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: '#047857' }}>+{formatCurrency(month.netProfitLoss)}</Text>
-                    </View>
-                  </Animated.View>
-                ))}
+                    </Animated.View>
+                  ))}
+                  {streakMonths.length > 6 && (
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginBottom: scale(8) }}>
+                      +{streakMonths.length - 6} more months
+                    </Text>
+                  )}
+                </ScrollView>
               </View>
               
               {/* Motivational Footer */}
@@ -300,7 +311,7 @@ export default function HomeScreen() {
           message="Add your first month to start tracking your trading performance"
           actionLabel="Add First Month"
           onAction={() => router.push('/add-month')}
-          icon="📈"
+          icon="trending-up"
         />
       </SafeAreaView>
     );
@@ -328,7 +339,10 @@ export default function HomeScreen() {
         {/* Header - Personalized Greeting */}
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(20) }}>
           <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted }}>{getGreeting()}</Text>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getUserName(displayName, user?.email)} 👋</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: scale(4) }}>
+            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text }}>{getUserName(displayName, user?.email)}</Text>
+            <Ionicons name="hand-left" size={scale(26)} color="#F59E0B" style={{ marginLeft: scale(8), opacity: 0.9 }} />
+          </View>
         </View>
         
         {/* Hero P&L Card */}
@@ -376,10 +390,10 @@ export default function HomeScreen() {
             <TouchableOpacity 
               onPress={() => setShowStreakModal(true)}
               activeOpacity={0.8}
-              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 184, 0, 0.15)', borderRadius: scale(16), padding: scale(16), gap: scale(12) }}
+              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 140, 0, 0.15)', borderRadius: scale(16), padding: scale(16), gap: scale(12) }}
             >
-              <View style={{ width: scale(44), height: scale(44), borderRadius: scale(22), backgroundColor: '#FFB800', justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ fontSize: fontScale(22) }}>🔥</Text>
+              <View style={{ width: scale(44), height: scale(44), borderRadius: scale(22), backgroundColor: '#FF8C00', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="flame" size={scale(24)} color="#FFFFFF" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text }}>{streak} Month Profit Streak!</Text>
@@ -396,32 +410,26 @@ export default function HomeScreen() {
           <View style={{ flexDirection: 'row', gap: scale(12) }}>
             <TouchableOpacity 
               onPress={() => router.push('/add-month')}
-              style={{ flex: 1, backgroundColor: themeColors.card, borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(8), borderWidth: 1, borderColor: themeColors.border }}
+              style={{ flex: 1, backgroundColor: 'rgba(16, 185, 95, 0.15)', borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(10) }}
             >
-              <View style={{ width: scale(44), height: scale(44), borderRadius: scale(12), backgroundColor: 'rgba(16, 185, 95, 0.15)', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="add-circle" size={scale(24)} color="#10B95F" />
-              </View>
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: themeColors.text }}>Add Month</Text>
+              <Ionicons name="add-circle" size={scale(32)} color="#10B95F" style={{ opacity: 0.9 }} />
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: '#10B95F' }}>Add Month</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              onPress={() => router.push('/(tabs)/analytics')}
-              style={{ flex: 1, backgroundColor: themeColors.card, borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(8), borderWidth: 1, borderColor: themeColors.border }}
+              onPress={() => router.push('/compare')}
+              style={{ flex: 1, backgroundColor: 'rgba(99, 102, 241, 0.15)', borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(10) }}
             >
-              <View style={{ width: scale(44), height: scale(44), borderRadius: scale(12), backgroundColor: 'rgba(99, 102, 241, 0.15)', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="bar-chart" size={scale(24)} color="#6366F1" />
-              </View>
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: themeColors.text }}>Analytics</Text>
+              <Ionicons name="git-compare" size={scale(32)} color="#6366F1" style={{ opacity: 0.9 }} />
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: '#6366F1' }}>Compare</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               onPress={() => router.push('/(tabs)/calendar')}
-              style={{ flex: 1, backgroundColor: themeColors.card, borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(8), borderWidth: 1, borderColor: themeColors.border }}
+              style={{ flex: 1, backgroundColor: 'rgba(251, 191, 36, 0.15)', borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(10) }}
             >
-              <View style={{ width: scale(44), height: scale(44), borderRadius: scale(12), backgroundColor: 'rgba(251, 191, 36, 0.15)', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="calendar" size={scale(24)} color="#FBBF24" />
-              </View>
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: themeColors.text }}>Calendar</Text>
+              <Ionicons name="calendar" size={scale(32)} color="#FBBF24" style={{ opacity: 0.9 }} />
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: '#FBBF24' }}>Calendar</Text>
             </TouchableOpacity>
           </View>
         </View>

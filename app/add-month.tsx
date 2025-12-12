@@ -202,7 +202,12 @@ export default function AddMonthScreen() {
           
           {/* Capital Card */}
           <View style={[styles.card, { backgroundColor: themeColors.card }]}>
-            <Text style={[styles.cardTitle, { color: themeColors.text }]}>Capital</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(99, 102, 241, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="wallet-outline" size={18} color="#6366F1" />
+              </View>
+              <Text style={[styles.cardTitle, { color: themeColors.text, marginBottom: 0 }]}>Capital</Text>
+            </View>
             
             <View style={styles.inputRow}>
               <Text style={[styles.inputLabel, { color: themeColors.textMuted }]}>Starting Balance</Text>
@@ -265,7 +270,12 @@ export default function AddMonthScreen() {
           
           {/* Transfers Card */}
           <View style={[styles.card, { backgroundColor: themeColors.card }]}>
-            <Text style={[styles.cardTitle, { color: themeColors.text }]}>Transfers</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(16, 185, 95, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="swap-vertical-outline" size={18} color="#10B95F" />
+              </View>
+              <Text style={[styles.cardTitle, { color: themeColors.text, marginBottom: 0 }]}>Transfers</Text>
+            </View>
             
             <View style={styles.inputRow}>
               <View style={styles.inputLabelRow}>
@@ -332,7 +342,12 @@ export default function AddMonthScreen() {
           
           {/* Notes Card */}
           <View style={[styles.card, { backgroundColor: themeColors.card }]}>
-            <Text style={[styles.cardTitle, { color: themeColors.text }]}>Notes</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(251, 191, 36, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="document-text-outline" size={18} color="#FBBF24" />
+              </View>
+              <Text style={[styles.cardTitle, { color: themeColors.text, marginBottom: 0 }]}>Notes</Text>
+            </View>
             <TextInput
               style={[styles.textArea, { backgroundColor: themeColors.inputBg, color: themeColors.text }]}
               value={notes}

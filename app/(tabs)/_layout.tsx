@@ -1,9 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs, useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fonts } from '../../src/config/fonts';
 import { useTheme } from '../../src/context/ThemeContext';
 import { fontScale, scale } from '../../src/utils/scaling';
 
@@ -23,42 +21,6 @@ export default function TabLayout() {
   
   return (
     <View className="flex-1">
-      {/* Floating Add Button - Above Tab Bar */}
-      <View 
-        style={{ 
-          position: 'absolute', 
-          left: 0, 
-          right: 0, 
-          alignItems: 'center', 
-          zIndex: 100,
-          bottom: bottomMargin + scale(70),
-        }}
-      >
-        <Pressable onPress={() => router.push('/add-month')}>
-          <LinearGradient
-            colors={['#10B95F', '#059669']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ 
-              flexDirection: 'row', 
-              alignItems: 'center', 
-              paddingHorizontal: scale(20), 
-              paddingVertical: scale(13), 
-              borderRadius: scale(25), 
-              gap: scale(6),
-              shadowColor: '#10B95F',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.4,
-              shadowRadius: 12,
-              elevation: 10,
-            }}
-          >
-            <Ionicons name="add" size={scale(20)} color="#FFFFFF" />
-            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#FFFFFF' }}>Add new Month</Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
-      
       <Tabs
         screenOptions={{
           headerShown: false,
