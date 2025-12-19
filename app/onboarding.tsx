@@ -3,11 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-  Platform,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View
+    Platform,
+    StatusBar,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Swiper from 'react-native-swiper';
 import { fontScale, scale } from '../src/utils/scaling';
@@ -84,7 +84,7 @@ export default function OnboardingScreen() {
   };
   
   return (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <StatusBar barStyle={currentSlide.textColor === '#FFFFFF' ? 'light-content' : 'dark-content'} />
       
       <Swiper
@@ -97,7 +97,7 @@ export default function OnboardingScreen() {
         showsButtons={false}
       >
         {onboarding.map((item) => (
-          <View key={item.id} className="flex-1" style={{ backgroundColor: item.bgColor, paddingTop: scale(60) }}>
+          <View key={item.id} style={{ flex: 1, backgroundColor: item.bgColor, paddingTop: scale(60) }}>
             {/* Header */}
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: scale(24), marginBottom: scale(20) }}>
               <TouchableOpacity onPress={completeOnboarding}>
@@ -106,7 +106,7 @@ export default function OnboardingScreen() {
             </View>
             
             {/* Visual Area */}
-            <View className="flex-1 justify-center items-center" style={{ paddingBottom: scale(40) }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: scale(40) }}>
               <View 
                 style={{ 
                   width: scale(200), 

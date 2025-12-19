@@ -12,12 +12,14 @@ export default function WelcomeOnboardingScreen() {
   };
   
   return (
-    <View className="flex-1 bg-dark-bg">
+    <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
       {/* Centered Content */}
-      <View className="flex-1 justify-center items-center" style={{ paddingHorizontal: scale(40) }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: scale(40) }}>
         <View 
-          className="bg-profit-light justify-center items-center"
           style={{ 
+            backgroundColor: 'rgba(16, 185, 95, 0.1)',
+            justifyContent: 'center',
+            alignItems: 'center',
             width: scale(120), 
             height: scale(120), 
             borderRadius: scale(30),
@@ -35,8 +37,7 @@ export default function WelcomeOnboardingScreen() {
       {/* Bottom Button */}
       <View style={{ paddingHorizontal: scale(24), paddingBottom: scale(64) }}>
         <TouchableOpacity 
-          className="flex-row items-center justify-center bg-primary"
-          style={{ paddingVertical: scale(18), paddingHorizontal: scale(32), borderRadius: scale(16), gap: scale(8) }}
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#10B95F', paddingVertical: scale(18), paddingHorizontal: scale(32), borderRadius: scale(16), gap: scale(8) }}
           onPress={handleContinue}
         >
           <Text style={{ fontSize: fontScale(18), fontWeight: '700', color: '#FFFFFF' }}>Get Started</Text>

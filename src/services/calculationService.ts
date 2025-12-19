@@ -30,7 +30,8 @@ export function createMonthRecord(
   deposits: number,
   withdrawals: number,
   notes: string,
-  status: 'active' | 'closed' = 'closed'
+  status: 'active' | 'closed' = 'closed',
+  pnlSource: 'manual' | 'trades' = 'manual'
 ): MonthRecord {
   const metrics = calculateMonthMetrics(startingCapital, endingCapital, deposits, withdrawals);
   
@@ -46,6 +47,7 @@ export function createMonthRecord(
     grossChange: metrics.grossChange,
     netProfitLoss: metrics.netProfitLoss,
     returnPercentage: metrics.returnPercentage,
+    pnlSource,
     status,
     notes,
     createdAt: Date.now(),

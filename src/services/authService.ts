@@ -145,3 +145,48 @@ export function getAuthErrorMessage(errorCode: string): string {
       return 'An error occurred. Please try again.';
   }
 }
+
+/**
+ * Send email verification to current user
+ */
+export async function sendVerificationEmail(): Promise<void> {
+  const user = auth.currentUser;
+  if (user) {
+    try {
+      console.log('Sending verification email to:', user.email);
+      await import('firebase/auth').then(({ sendEmailVerification }) => 
+        sendEmailVerification(user)
+      );
+      console.log('Verification email sent successfully');
+    } catch (error: any) {
+      console.error('Failed to send verification email:', error.code, error.message);
+      throw error;
+    }
+  } else {
+    console.warn('No current user to send verification email to');
+  }
+}
+
+/**
+ * Reload current user data (to check verification status)
+ */
+export async function reloadUser(): Promise<User | null> {
+  const user = auth.currentUser;
+  if (user) {
+    await user.reload();
+    return auth.currentUser;
+  }
+  return null;
+}
+
+/**
+ * Update user's display name
+ */
+export async function updateDisplayName(displayName: string): Promise<void> {
+  const user = auth.currentUser;
+  if (user) {
+    await import('firebase/auth').then(({ updateProfile }) => 
+      updateProfile(user, { displayName })
+    );
+  }
+}

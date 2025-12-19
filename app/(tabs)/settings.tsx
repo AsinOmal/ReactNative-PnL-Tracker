@@ -27,6 +27,7 @@ import {
     setBiometricEnabled,
 } from '../../src/services/biometricService';
 import { generateAndShareCSV } from '../../src/services/csvService';
+import { sendSupportEmail } from '../../src/services/feedbackService';
 import {
     areNotificationsEnabled,
     cancelAllNotifications,
@@ -42,16 +43,18 @@ export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { user, logout } = useAuth();
-  const { months, displayName, setDisplayName } = useTrading();
+  const { months } = useTrading();
   const router = useRouter();
+  const { refreshUser } = useAuth();
   
   const [editingName, setEditingName] = useState(false);
-  const [localName, setLocalName] = useState(displayName);
+  const [localName, setLocalName] = useState(user?.displayName || '');
+  const [isSavingName, setIsSavingName] = useState(false);
   
-  // Sync localName when displayName changes
+  // Sync localName when user displayName changes
   useEffect(() => {
-    setLocalName(displayName);
-  }, [displayName]);
+    setLocalName(user?.displayName || '');
+  }, [user?.displayName]);
   
   const [biometric, setBiometric] = useState<BiometricCapabilities | null>(null);
   const [biometricOn, setBiometricOn] = useState(false);
@@ -251,7 +254,7 @@ export default function SettingsScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(20) }}>
@@ -275,16 +278,34 @@ export default function SettingsScreen() {
                   style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, padding: 0, borderBottomWidth: 1, borderBottomColor: '#10B95F' }}
                   value={localName}
                   onChangeText={setLocalName}
-                  onBlur={() => {
+                  onBlur={async () => {
                     setEditingName(false);
-                    if (localName !== displayName) {
-                      setDisplayName(localName.trim());
+                    if (localName.trim() !== (user?.displayName || '')) {
+                      setIsSavingName(true);
+                      try {
+                        const { updateDisplayName } = await import('../../src/services/authService');
+                        await updateDisplayName(localName.trim());
+                        await refreshUser();
+                      } catch (e) {
+                        console.error('Failed to update name:', e);
+                      } finally {
+                        setIsSavingName(false);
+                      }
                     }
                   }}
-                  onSubmitEditing={() => {
+                  onSubmitEditing={async () => {
                     setEditingName(false);
-                    if (localName !== displayName) {
-                      setDisplayName(localName.trim());
+                    if (localName.trim() !== (user?.displayName || '')) {
+                      setIsSavingName(true);
+                      try {
+                        const { updateDisplayName } = await import('../../src/services/authService');
+                        await updateDisplayName(localName.trim());
+                        await refreshUser();
+                      } catch (e) {
+                        console.error('Failed to update name:', e);
+                      } finally {
+                        setIsSavingName(false);
+                      }
                     }
                   }}
                   autoFocus
@@ -295,7 +316,7 @@ export default function SettingsScreen() {
               ) : (
                 <TouchableOpacity onPress={() => setEditingName(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
                   <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text }}>
-                    {displayName || user?.email?.split('@')[0] || 'TradeX User'}
+                    {user?.displayName || user?.email?.split('@')[0] || 'TradeX User'}
                   </Text>
                   <Ionicons name="pencil" size={fontScale(14)} color={themeColors.textMuted} />
                 </TouchableOpacity>
@@ -399,7 +420,15 @@ export default function SettingsScreen() {
               iconColor={themeColors.text} 
               label="Help & Support" 
               type="link" 
+              onPress={async () => {
+                try {
+                  await sendSupportEmail(user?.email || undefined);
+                } catch (error: any) {
+                  Alert.alert('Error', error.message || 'Could not open email client.');
+                }
+              }}
             />
+
             <SettingItem 
               icon="log-out" 
               iconColor="#EF4444" 

@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { EmptyState } from '../../src/components/EmptyState';
+import { AIInsightsModal } from '../../src/components/AIInsightsModal';
 import { MonthCard } from '../../src/components/MonthCard';
 import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
 import { Skeleton, SkeletonHeroCard, SkeletonMonthCard } from '../../src/components/SkeletonLoader';
@@ -230,18 +231,20 @@ Consistency is the key to success. You're proving it!
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { months, stats, isLoading, loadMonths, getRecentMonths, displayName } = useTrading();
-  const { isDark } = useTheme();
+  const { months, stats, isLoading, loadMonths, getRecentMonths } = useTrading();
+  const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
-  const { togglePrivacyMode } = usePrivacy();
+  const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const [refreshing, setRefreshing] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
+  const [showAIInsights, setShowAIInsights] = useState(false);
   
   // Typing animation state
   const [typedGreeting, setTypedGreeting] = useState('');
   const greetingFadeAnim = useRef(new Animated.Value(0)).current;
   const greetingPrefix = `${getGreeting()}, `;
-  const userName = getUserName(displayName, user?.email);
+  // Use Firebase Auth displayName (set during onboarding)
+  const userName = getUserName(user?.displayName ?? undefined, user?.email);
   const fullGreeting = `${greetingPrefix}${userName}!`;
   
   // Typing animation effect
@@ -267,7 +270,7 @@ export default function HomeScreen() {
     }, 80);
     
     return () => clearInterval(typingInterval);
-  }, [displayName, user?.email]);
+  }, [user?.displayName, user?.email]);
   
   const recentMonths = getRecentMonths(3);
   const currentMonthKey = getMonthKey();
@@ -298,6 +301,8 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [loadMonths]);
   
+  // Auto-start tour for first-time users
+
   const themeColors = {
     bg: isDark ? '#0A0A0A' : '#FAFAFA',
     card: isDark ? '#1F1F23' : '#FFFFFF',
@@ -309,7 +314,7 @@ export default function HomeScreen() {
   
   if (isLoading && months.length === 0) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }}>
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(20) }}>
           <Skeleton width={120} height={16} borderRadius={4} />
           <Skeleton width={180} height={32} borderRadius={6} style={{ marginTop: scale(8) }} />
@@ -331,26 +336,10 @@ export default function HomeScreen() {
     );
   }
   
-  if (months.length === 0) {
-    return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
-        <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16) }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.textMuted }}>{getGreeting()}</Text>
-          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(28), color: themeColors.text, marginTop: scale(4) }}>{getUserName(displayName, user?.email)}</Text>
-        </View>
-        <EmptyState
-          title="Start Tracking"
-          message="Add your first month to start tracking your trading performance"
-          actionLabel="Add First Month"
-          onAction={() => router.push('/add-month')}
-          icon="trending-up"
-        />
-      </SafeAreaView>
-    );
-  }
+  // Removed empty state - home now shows with empty values and coach marks
   
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }}>
       {/* Streak Modal */}
       <StreakModal 
         visible={showStreakModal} 
@@ -360,8 +349,14 @@ export default function HomeScreen() {
         isDark={isDark}
       />
       
+      {/* AI Insights Modal */}
+      <AIInsightsModal
+        visible={showAIInsights}
+        onClose={() => setShowAIInsights(false)}
+      />
+      
       <ScrollView 
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: scale(140) }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -370,39 +365,197 @@ export default function HomeScreen() {
       >
         {/* Header - Premium Personalized Design */}
         <View style={{ paddingHorizontal: scale(20), paddingTop: scale(12), paddingBottom: scale(24) }}>
-          {/* Top Row - Date */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(8) }}>
-            <View style={{ width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: '#10B95F' }} />
-            <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-            </Text>
+          {/* Top Row - Date and Theme Toggle */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: scale(8) }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+              <View style={{ width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: '#10B95F' }} />
+              <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+              </Text>
+            </View>
+            
+            {/* Action Buttons */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(4) }}>
+              {/* Theme Toggle */}
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  toggleTheme();
+                }}
+                style={{
+                  width: scale(40),
+                  height: scale(40),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons 
+                  name={isDark ? 'sunny' : 'moon'} 
+                  size={scale(24)} 
+                  color={isDark ? '#FCD34D' : '#6366F1'} 
+                />
+              </TouchableOpacity>
+              
+              {/* Settings Button */}
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/(tabs)/settings');
+                }}
+                style={{
+                  width: scale(40),
+                  height: scale(40),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons 
+                  name="settings-outline" 
+                  size={scale(22)} 
+                  color={themeColors.textMuted} 
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           
           {/* Greeting Section - Animated */}
-          <Animated.View style={{ opacity: greetingFadeAnim }}>
-            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(24), color: themeColors.text, lineHeight: fontScale(32) }}>
-              {typedGreeting.length <= greetingPrefix.length ? (
-                typedGreeting
-              ) : (
-                <>
-                  {greetingPrefix}
-                  <Text style={{ color: '#10B95F' }}>
-                    {typedGreeting.slice(greetingPrefix.length)}
-                  </Text>
-                </>
-              )}
-              <Text style={{ color: '#10B95F', opacity: typedGreeting.length < fullGreeting.length ? 1 : 0 }}>|</Text>
-            </Text>
-          </Animated.View>
+          <View key={`greeting-${isDark}`} style={{ height: fontScale(50), justifyContent: 'flex-start' }}>
+            <Animated.View style={{ opacity: greetingFadeAnim }}>
+              <Text 
+                style={{ fontFamily: fonts.bold, fontSize: fontScale(24), color: themeColors.text, lineHeight: fontScale(32) }}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+              >
+                {typedGreeting.length <= greetingPrefix.length ? (
+                  typedGreeting
+                ) : (
+                  <>
+                    {greetingPrefix}
+                    <Text style={{ color: '#10B95F' }}>
+                      {typedGreeting.slice(greetingPrefix.length)}
+                    </Text>
+                  </>
+                )}
+                <Text style={{ color: '#10B95F', opacity: typedGreeting.length < fullGreeting.length ? 1 : 0 }}>|</Text>
+              </Text>
+            </Animated.View>
+          </View>
         </View>
-        
+
+        {/* Getting Started Guide - Show when no months */}
+        {months.length === 0 && (
+          <View style={{ paddingHorizontal: scale(20), marginBottom: scale(24) }}>
+            <LinearGradient
+              colors={isDark ? ['rgba(16, 185, 95, 0.15)', 'rgba(16, 185, 95, 0.05)'] : ['rgba(16, 185, 95, 0.1)', 'rgba(16, 185, 95, 0.02)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ 
+                borderRadius: scale(24),
+                padding: scale(24),
+                borderWidth: 1,
+                borderColor: 'rgba(16, 185, 95, 0.2)',
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: scale(20) }}>
+                <View style={{ 
+                  width: scale(44), 
+                  height: scale(44), 
+                  borderRadius: scale(14), 
+                  backgroundColor: '#10B95F',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginRight: scale(16),
+                  shadowColor: '#10B95F',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}>
+                  <Ionicons name="rocket" size={scale(22)} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: themeColors.text, marginBottom: scale(2) }}>
+                    Start Your Journey
+                  </Text>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: '#10B95F' }}>
+                    Track. Analyze. Grow.
+                  </Text>
+                </View>
+              </View>
+              
+              <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, lineHeight: fontScale(22), marginBottom: scale(24), textAlign: 'center' }}>
+                Welcome to TradeX! You're just a few steps away from tracking your trading performance like a pro.
+              </Text>
+              
+              <View style={{ gap: scale(20) }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ 
+                    width: scale(28), height: scale(28), borderRadius: scale(14), 
+                    backgroundColor: isDark ? 'rgba(16, 185, 95, 0.1)' : '#FFFFFF', 
+                    justifyContent: 'center', alignItems: 'center', marginRight: scale(14),
+                    borderWidth: 1, borderColor: 'rgba(16, 185, 95, 0.3)',
+                    shadowColor: '#10B95F', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8, elevation: 6
+                  }}>
+                    <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(13), color: '#10B95F' }}>1</Text>
+                  </View>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: themeColors.text, flex: 1, lineHeight: fontScale(20) }}>
+                    Tap <Text style={{ color: '#10B95F', fontFamily: fonts.bold }}>"Add Month"</Text> below to log your first month
+                  </Text>
+                </View>
+                
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ 
+                    width: scale(28), height: scale(28), borderRadius: scale(14), 
+                    backgroundColor: isDark ? 'rgba(16, 185, 95, 0.1)' : '#FFFFFF', 
+                    justifyContent: 'center', alignItems: 'center', marginRight: scale(14),
+                    borderWidth: 1, borderColor: 'rgba(16, 185, 95, 0.3)',
+                    shadowColor: '#10B95F', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8, elevation: 6
+                  }}>
+                    <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(13), color: '#10B95F' }}>2</Text>
+                  </View>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: themeColors.text, flex: 1, lineHeight: fontScale(20) }}>
+                    Enter your P&L, notes, and mark the month status
+                  </Text>
+                </View>
+                
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ 
+                    width: scale(28), height: scale(28), borderRadius: scale(14), 
+                    backgroundColor: isDark ? 'rgba(16, 185, 95, 0.1)' : '#FFFFFF', 
+                    justifyContent: 'center', alignItems: 'center', marginRight: scale(14),
+                    borderWidth: 1, borderColor: 'rgba(16, 185, 95, 0.3)',
+                    shadowColor: '#10B95F', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8, elevation: 6
+                  }}>
+                    <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(13), color: '#10B95F' }}>3</Text>
+                  </View>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: themeColors.text, flex: 1, lineHeight: fontScale(20) }}>
+                    View analytics, trends, and AI insights as you track
+                  </Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+        )}
+
         {/* Hero P&L Card */}
         <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
           <LinearGradient
             colors={stats.totalProfitLoss >= 0 ? ['#10B95F', '#059669'] : ['#EF4444', '#DC2626']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ borderRadius: scale(24), padding: scale(24), overflow: 'hidden' }}
+            style={{ 
+              borderRadius: scale(24), 
+              padding: scale(24), 
+              overflow: 'hidden',
+              shadowColor: '#10B95F',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 25,
+              elevation: 15
+            }}
           >
             {/* Decorative circles */}
             <View style={{ position: 'absolute', top: -50, right: -50, width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(255,255,255,0.1)' }} />
@@ -457,6 +610,7 @@ export default function HomeScreen() {
           </View>
         )}
         
+
         {/* Quick Actions */}
         <View style={{ paddingHorizontal: scale(20), marginBottom: scale(24) }}>
           <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(12) }}>Quick Actions</Text>
@@ -478,11 +632,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
             
             <TouchableOpacity 
-              onPress={() => router.push('/(tabs)/calendar')}
-              style={{ flex: 1, backgroundColor: 'rgba(251, 191, 36, 0.15)', borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(10) }}
+              onPress={() => setShowAIInsights(true)}
+              style={{ flex: 1, backgroundColor: 'rgba(225, 29, 72, 0.15)', borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(10) }}
             >
-              <Ionicons name="calendar" size={scale(32)} color="#FBBF24" style={{ opacity: 0.9 }} />
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: '#FBBF24' }}>Calendar</Text>
+              <Ionicons name="sparkles" size={scale(32)} color="#E11D48" style={{ opacity: 0.9 }} />
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: '#E11D48' }}>AI Insights</Text>
             </TouchableOpacity>
           </View>
         </View>

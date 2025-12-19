@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 // @ts-ignore
-import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
+import { Auth, getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration
@@ -21,7 +21,7 @@ const app = initializeApp(firebaseConfig);
 // We try initializeAuth first; if it throws (e.g. already initialized), we use getAuth
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-let auth;
+let auth: Auth;
 try {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)

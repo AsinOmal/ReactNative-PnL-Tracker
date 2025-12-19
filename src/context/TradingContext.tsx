@@ -2,24 +2,37 @@ import React, { createContext, ReactNode, useCallback, useContext, useEffect, us
 import { calculateOverallStats, getRecentMonths } from '../services/calculationService';
 import {
     deleteMonthFromFirestore,
+    deleteTradeFromFirestore,
     getMonths,
     monthExistsInFirestore,
     saveMonth as saveMonthToFirestore,
+    saveTrade as saveTradeToFirestore,
     subscribeToMonths,
+    subscribeToTrades,
 } from '../services/firestoreService';
 import { generateAndSharePDF } from '../services/pdfService';
-import { MonthRecord, OverallStats } from '../types';
+import {
+    calculateMonthlyPnLFromTrades,
+    calculateTradeStats,
+    getRecentTrades as getRecentTradesUtil,
+} from '../services/tradeCalculationService';
+import { MonthRecord, OverallStats, Trade, TradeStats } from '../types';
 import { useAuth } from './AuthContext';
 
 interface TradingContextType {
-  // State
+  // State - Months
   months: MonthRecord[];
   activeMonth: MonthRecord | null;
   isLoading: boolean;
   error: string | null;
   stats: OverallStats;
   
-  // Actions
+  // State - Trades
+  trades: Trade[];
+  tradeStats: TradeStats;
+  isLoadingTrades: boolean;
+  
+  // Month Actions
   loadMonths: () => Promise<void>;
   addMonth: (monthData: MonthRecord) => Promise<void>;
   updateMonth: (id: string, updates: Partial<MonthRecord>) => Promise<void>;
@@ -29,6 +42,17 @@ interface TradingContextType {
   getMonthById: (id: string) => MonthRecord | undefined;
   getRecentMonths: (limit?: number) => MonthRecord[];
   monthExists: (monthKey: string) => Promise<boolean>;
+  
+  // Trade Actions
+  addTrade: (trade: Trade) => Promise<void>;
+  updateTrade: (id: string, trade: Trade) => Promise<void>;
+  deleteTrade: (id: string) => Promise<void>;
+  getTradeById: (id: string) => Trade | undefined;
+  getTradesByMonth: (monthKey: string) => Trade[];
+  getRecentTrades: (limit?: number) => Trade[];
+  recalculateMonthPnL: (monthKey: string) => Promise<void>;
+  
+  // User Profile
   yearlyGoal: number;
   setYearlyGoal: (goal: number) => Promise<void>;
   displayName: string;
@@ -43,28 +67,44 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Trade state
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [isLoadingTrades, setIsLoadingTrades] = useState(true);
+  
   // Derived state
   const activeMonth = months.find(m => m.status === 'active') || null;
   const stats = calculateOverallStats(months);
+  const tradeStats = calculateTradeStats(trades);
   
   // Subscribe to real-time updates when user is authenticated
   useEffect(() => {
     if (!isAuthenticated || !user) {
       setMonths([]);
+      setTrades([]);
       setIsLoading(false);
+      setIsLoadingTrades(false);
       return;
     }
     
     setIsLoading(true);
+    setIsLoadingTrades(true);
     
-    // Subscribe to real-time Firestore updates
-    const unsubscribe = subscribeToMonths(user.uid, (updatedMonths) => {
+    // Subscribe to real-time Firestore updates for months
+    const unsubscribeMonths = subscribeToMonths(user.uid, (updatedMonths) => {
       setMonths(updatedMonths);
       setIsLoading(false);
     });
     
-    return () => unsubscribe();
-    return () => unsubscribe();
+    // Subscribe to real-time Firestore updates for trades
+    const unsubscribeTrades = subscribeToTrades(user.uid, (updatedTrades) => {
+      setTrades(updatedTrades);
+      setIsLoadingTrades(false);
+    });
+    
+    return () => {
+      unsubscribeMonths();
+      unsubscribeTrades();
+    };
   }, [isAuthenticated, user]);
 
   const [yearlyGoal, setUserYearlyGoal] = useState<number>(0);
@@ -214,7 +254,96 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     return monthExistsInFirestore(user.uid, monthKey);
   }, [user]);
   
+  // ============================================
+  // TRADE ACTIONS
+  // ============================================
+  
+  const addTrade = useCallback(async (trade: Trade) => {
+    if (!user) throw new Error('Not authenticated');
+    
+    try {
+      setError(null);
+      await saveTradeToFirestore(user.uid, {
+        ...trade,
+        createdAt: Date.now(),
+      });
+      // State will update automatically via subscription
+    } catch (err) {
+      setError('Failed to save trade');
+      console.error('Add trade error:', err);
+      throw err;
+    }
+  }, [user]);
+  
+  const updateTrade = useCallback(async (id: string, trade: Trade) => {
+    if (!user) throw new Error('Not authenticated');
+    
+    try {
+      setError(null);
+      await saveTradeToFirestore(user.uid, {
+        ...trade,
+        id,
+        updatedAt: Date.now(),
+      });
+      // State will update automatically via subscription
+    } catch (err) {
+      setError('Failed to update trade');
+      console.error('Update trade error:', err);
+      throw err;
+    }
+  }, [user]);
+  
+  const deleteTrade = useCallback(async (id: string) => {
+    if (!user) throw new Error('Not authenticated');
+    
+    try {
+      setError(null);
+      await deleteTradeFromFirestore(user.uid, id);
+      // State will update automatically via subscription
+    } catch (err) {
+      setError('Failed to delete trade');
+      console.error('Delete trade error:', err);
+      throw err;
+    }
+  }, [user]);
+  
+  const getTradeByIdAction = useCallback((id: string) => {
+    return trades.find(t => t.id === id);
+  }, [trades]);
+  
+  const getTradesByMonthAction = useCallback((monthKey: string) => {
+    return trades.filter(t => t.monthKey === monthKey);
+  }, [trades]);
+  
+  const getRecentTradesAction = useCallback((limit = 10) => {
+    return getRecentTradesUtil(trades, limit);
+  }, [trades]);
+  
+  // Recalculate month P&L from trades (for pnlSource='trades' months)
+  const recalculateMonthPnL = useCallback(async (monthKey: string) => {
+    if (!user) throw new Error('Not authenticated');
+    
+    const month = months.find(m => m.month === monthKey);
+    if (!month || month.pnlSource !== 'trades') return;
+    
+    const monthTrades = trades.filter(t => t.monthKey === monthKey);
+    const netProfitLoss = calculateMonthlyPnLFromTrades(monthTrades, monthKey);
+    
+    // Update the month with new P&L
+    const newEndingCapital = month.startingCapital + netProfitLoss + month.deposits - month.withdrawals;
+    
+    await saveMonthToFirestore(user.uid, {
+      ...month,
+      endingCapital: newEndingCapital,
+      netProfitLoss,
+      grossChange: newEndingCapital - month.startingCapital,
+      returnPercentage: month.startingCapital > 0 ? (netProfitLoss / month.startingCapital) * 100 : 0,
+      updatedAt: Date.now(),
+    });
+  }, [user, months, trades]);
+  
   const value: TradingContextType = {
+    // Months
     months,
     activeMonth,
     isLoading,
@@ -229,6 +358,20 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     getMonthById: getMonthByIdAction,
     getRecentMonths: getRecentMonthsAction,
     monthExists: monthExistsAction,
+    
+    // Trades
+    trades,
+    tradeStats,
+    isLoadingTrades,
+    addTrade,
+    updateTrade,
+    deleteTrade,
+    getTradeById: getTradeByIdAction,
+    getTradesByMonth: getTradesByMonthAction,
+    getRecentTrades: getRecentTradesAction,
+    recalculateMonthPnL,
+    
+    // User Profile
     yearlyGoal,
     setYearlyGoal,
     displayName,

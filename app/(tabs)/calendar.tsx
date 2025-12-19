@@ -128,7 +128,7 @@ export default function CalendarScreen() {
   const tileWidth = (screenWidth - scale(40) - scale(20)) / 3; // 40 = horizontal padding, 20 = 2 gaps
   
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }}>
       <ScrollView 
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={{ paddingBottom: scale(140) }}
@@ -142,24 +142,96 @@ export default function CalendarScreen() {
           <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: themeColors.textMuted, marginTop: scale(4) }}>View your monthly performance</Text>
         </View>
         
+        {monthRecords.length === 0 ? (
+          <View style={{ paddingHorizontal: scale(20), paddingTop: scale(10) }}>
+            <LinearGradient
+              colors={isDark ? ['rgba(245, 158, 11, 0.15)', 'rgba(217, 119, 6, 0.05)'] : ['rgba(245, 158, 11, 0.08)', 'rgba(217, 119, 6, 0.02)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ 
+                  borderRadius: scale(24), 
+                  padding: scale(32),
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
+                  position: 'relative',
+                  overflow: 'hidden'
+              }}
+            >
+                {/* Decorative Background Elements */}
+                <View style={{ position: 'absolute', top: -30, right: -30, width: scale(120), height: scale(120), borderRadius: scale(60), backgroundColor: isDark ? 'rgba(245, 158, 11, 0.1)' : 'rgba(245, 158, 11, 0.05)' }} />
+                <View style={{ position: 'absolute', bottom: -40, left: -20, width: scale(100), height: scale(100), borderRadius: scale(50), backgroundColor: isDark ? 'rgba(245, 158, 11, 0.08)' : 'rgba(245, 158, 11, 0.03)' }} />
+
+                {/* Main Content */}
+                <View style={{ 
+                  width: scale(72), height: scale(72), borderRadius: scale(36), 
+                  backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)', 
+                  justifyContent: 'center', alignItems: 'center',
+                  marginBottom: scale(20),
+                  borderWidth: 1, borderColor: isDark ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.15)',
+                }}>
+                  <Ionicons name="calendar" size={scale(36)} color="#F59E0B" />
+                </View>
+                
+                <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(22), color: themeColors.text, marginBottom: scale(10), textAlign: 'center' }}>
+                  Unlock Your Calendar
+                </Text>
+                
+                <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(15), color: themeColors.textMuted, textAlign: 'center', lineHeight: fontScale(24), marginBottom: scale(28) }}>
+                  Visualize your consistency. Log your first trading month to populate your calendar and track streaks.
+                </Text>
+                
+                <TouchableOpacity
+                  onPress={() => router.push('/add-month')}
+                  activeOpacity={0.8}
+                  style={{
+                    backgroundColor: '#F59E0B',
+                    paddingHorizontal: scale(28),
+                    paddingVertical: scale(14),
+                    borderRadius: scale(18),
+                    shadowColor: '#F59E0B',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    elevation: 5,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: scale(10)
+                  }}
+                >
+                  <Ionicons name="add-circle" size={scale(22)} color="#FFFFFF" />
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(15), color: '#FFFFFF' }}>Start Journaling</Text>
+                </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        ) : (
+          <>
         {/* Year Selector with Integrated Streak */}
        <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
         {streak > 0 && selectedYear === currentYear ? (
           /* Streak Mode - Premium Gradient Design */
           <LinearGradient
-            colors={['#F59E0B', '#D97706', '#B45309']}
+            colors={['#FBBF24', '#D97706', '#92400E']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
-              borderRadius: scale(20),
+              borderRadius: scale(24),
               padding: scale(4),
               shadowColor: '#F59E0B',
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.4,
-              shadowRadius: 16,
-              elevation: 10,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 20,
+              elevation: 12,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.4)',
+              overflow: 'hidden', // Ensure decorations don't bleed out
             }}
           >
+            {/* Decorative Background Rays/Glows */}
+            <View style={{ position: 'absolute', top: -50, left: -50, width: scale(150), height: scale(150), borderRadius: scale(75), backgroundColor: 'rgba(255, 255, 255, 0.1)', opacity: 0.6 }} />
+            <View style={{ position: 'absolute', bottom: -30, right: -20, width: scale(100), height: scale(100), borderRadius: scale(50), backgroundColor: 'rgba(255, 220, 0, 0.15)', opacity: 0.5 }} />
+            <View style={{ position: 'absolute', top: '50%', left: '50%', width: scale(200), height: scale(40), backgroundColor: 'rgba(255, 255, 255, 0.05)', transform: [{ translateX: -100 }, { rotate: '45deg' }] }} />
+
             <View style={{ 
               flexDirection: 'row', 
               alignItems: 'center', 
@@ -180,14 +252,18 @@ export default function CalendarScreen() {
                   <Ionicons name="chevron-back" size={scale(28)} color="#FFFFFF" />
                 </TouchableOpacity>
                 
-                <View style={{
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  paddingHorizontal: scale(14),
-                  paddingVertical: scale(8),
-                  borderRadius: scale(10),
-                }}>
-                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: '#FFFFFF' }}>{streak}</Text>
-                </View>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+                  style={{
+                    paddingHorizontal: scale(16),
+                    paddingVertical: scale(8),
+                    borderRadius: scale(14),
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.5)',
+                  }}
+                >
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.2)', textShadowRadius: 4 }}>{streak}</Text>
+                </LinearGradient>
               </View>
               
               {/* Center - Year + P&L */}
@@ -202,16 +278,20 @@ export default function CalendarScreen() {
               
               {/* Right - Fire Icon + Forward Arrow */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(12) }}>
-                <View style={{
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  width: scale(44),
-                  height: scale(44),
-                  borderRadius: scale(12),
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}>
-                  <Ionicons name="flame" size={scale(22)} color="#FFFFFF" />
-                </View>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+                  style={{
+                    width: scale(48),
+                    height: scale(48),
+                    borderRadius: scale(16),
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.5)',
+                  }}
+                >
+                  <Ionicons name="flame" size={scale(24)} color="#FFFFFF" style={{ textShadowColor: 'rgba(0,0,0,0.3)', textShadowRadius: 4 }} />
+                </LinearGradient>
                 
                 <TouchableOpacity 
                   onPress={() => setSelectedYear(y => y + 1)}
@@ -396,6 +476,8 @@ export default function CalendarScreen() {
             <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: themeColors.textMuted }}>No Data</Text>
           </View>
         </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

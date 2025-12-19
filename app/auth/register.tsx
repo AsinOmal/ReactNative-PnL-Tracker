@@ -2,17 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../../src/config/fonts';
 import { useAuth } from '../../src/context/AuthContext';
 import { fontScale, scale } from '../../src/utils/scaling';
 
@@ -54,11 +55,11 @@ export default function RegisterScreen() {
   };
   
   return (
-    <View className="flex-1 bg-primary">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+    <View style={{ flex: 1, backgroundColor: '#10B95F' }}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
+          style={{ flex: 1 }}
         >
           <ScrollView 
             contentContainerStyle={{ flexGrow: 1, paddingHorizontal: scale(24), paddingBottom: scale(40) }}
@@ -84,8 +85,8 @@ export default function RegisterScreen() {
             
             {/* Header - Centered */}
             <View style={{ alignItems: 'center', marginBottom: scale(24) }}>
-              <Text style={{ fontSize: fontScale(48), fontWeight: '800', color: '#FFFFFF', textAlign: 'center', marginBottom: scale(8) }}>Sign Up</Text>
-              <Text style={{ fontSize: fontScale(15), color: 'rgba(255,255,255,0.8)', lineHeight: fontScale(22), textAlign: 'center' }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(48), color: '#FFFFFF', textAlign: 'center', marginBottom: scale(8) }}>Sign Up</Text>
+              <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: 'rgba(255,255,255,0.8)', lineHeight: fontScale(22), textAlign: 'center' }}>
                 One Step, One way{'\n'}to financial freedom.
               </Text>
             </View>
@@ -94,14 +95,14 @@ export default function RegisterScreen() {
             {error && (
               <View style={{ flexDirection: 'row', alignItems: 'center', padding: scale(12), borderRadius: scale(12), backgroundColor: 'rgba(239, 68, 68, 0.2)', marginBottom: scale(16), gap: scale(8) }}>
                 <Ionicons name="alert-circle" size={scale(18)} color="#FFFFFF" />
-                <Text style={{ fontSize: fontScale(14), color: '#FFFFFF', flex: 1 }}>{error}</Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: '#FFFFFF', flex: 1 }}>{error}</Text>
               </View>
             )}
             
             {/* Form */}
             <View style={{ gap: scale(20), marginBottom: scale(24) }}>
               <View style={{ gap: scale(8) }}>
-                <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>EMAIL</Text>
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>EMAIL</Text>
                 <View 
                   style={{ 
                     flexDirection: 'row', 
@@ -118,6 +119,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={{ 
                       flex: 1, 
+                      fontFamily: fonts.regular,
                       fontSize: fontScale(16), 
                       color: '#FFFFFF',
                       height: '100%',
@@ -134,7 +136,7 @@ export default function RegisterScreen() {
               </View>
               
               <View style={{ gap: scale(8) }}>
-                <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>PASSWORD</Text>
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>PASSWORD</Text>
                 <View 
                   style={{ 
                     flexDirection: 'row', 
@@ -151,6 +153,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={{ 
                       flex: 1, 
+                      fontFamily: fonts.regular,
                       fontSize: fontScale(16), 
                       color: '#FFFFFF',
                       height: '100%',
@@ -160,6 +163,8 @@ export default function RegisterScreen() {
                     placeholder="Password"
                     placeholderTextColor="rgba(255,255,255,0.5)"
                     secureTextEntry={!showPassword}
+                    textContentType="oneTimeCode"
+                    autoComplete="off"
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ marginLeft: scale(12) }}>
                     <Ionicons 
@@ -172,7 +177,7 @@ export default function RegisterScreen() {
               </View>
               
               <View style={{ gap: scale(8) }}>
-                <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>CONFIRM PASSWORD</Text>
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>CONFIRM PASSWORD</Text>
                 <View 
                   style={{ 
                     flexDirection: 'row', 
@@ -189,6 +194,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={{ 
                       flex: 1, 
+                      fontFamily: fonts.regular,
                       fontSize: fontScale(16), 
                       color: '#FFFFFF',
                       height: '100%',
@@ -198,6 +204,8 @@ export default function RegisterScreen() {
                     placeholder="Confirm Password"
                     placeholderTextColor="rgba(255,255,255,0.5)"
                     secureTextEntry={!showPassword}
+                    textContentType="oneTimeCode"
+                    autoComplete="off"
                   />
                 </View>
               </View>
@@ -221,7 +229,7 @@ export default function RegisterScreen() {
                 >
                   {acceptTerms && <Ionicons name="checkmark" size={scale(16)} color="#10B95F" />}
                 </View>
-                <Text style={{ fontSize: fontScale(14), color: '#FFFFFF' }}>Accept Terms and Conditions</Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: '#FFFFFF' }}>Accept Terms and Conditions</Text>
               </TouchableOpacity>
             </View>
             
@@ -241,15 +249,15 @@ export default function RegisterScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#10B95F" />
               ) : (
-                <Text style={{ fontSize: fontScale(18), fontWeight: '700', color: '#10B95F' }}>Sign Up</Text>
+                <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: '#10B95F' }}>Sign Up</Text>
               )}
             </TouchableOpacity>
             
             {/* Login Link */}
             <Link href="/auth/login" asChild>
               <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: scale(8), marginTop: 'auto' }}>
-                <Text style={{ fontSize: fontScale(14), color: 'rgba(255,255,255,0.7)' }}>Already have an account? </Text>
-                <Text style={{ fontSize: fontScale(14), fontWeight: '700', color: '#FFFFFF' }}>Login</Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: 'rgba(255,255,255,0.7)' }}>Already have an account? </Text>
+                <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#FFFFFF' }}>Login</Text>
               </TouchableOpacity>
             </Link>
           </ScrollView>

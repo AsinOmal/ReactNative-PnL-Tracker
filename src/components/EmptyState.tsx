@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { fonts } from '../config/fonts';
 import { useTheme } from '../context/ThemeContext';
+import { fontScale, scale } from '../utils/scaling';
 
 type IconName = 'bar-chart' | 'trending-up' | 'calendar' | 'wallet' | 'analytics' | 'document-text';
 
@@ -56,37 +58,38 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    padding: scale(40),
   },
   iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: scale(72),
+    height: scale(72),
+    borderRadius: scale(36),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: scale(16),
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: fontScale(20),
+    fontFamily: fonts.semiBold,
+    marginBottom: scale(8),
     textAlign: 'center',
   },
   message: {
-    fontSize: 14,
+    fontSize: fontScale(14),
+    fontFamily: fonts.regular,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
+    lineHeight: fontScale(20),
+    marginBottom: scale(24),
   },
   button: {
-    backgroundColor: '#6366F1',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
+    backgroundColor: '#10B95F',
+    paddingHorizontal: scale(24),
+    paddingVertical: scale(14),
+    borderRadius: scale(24),
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: fontScale(16),
+    fontFamily: fonts.semiBold,
   },
 });

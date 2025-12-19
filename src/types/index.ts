@@ -16,6 +16,9 @@ export interface MonthRecord {
   netProfitLoss: number;
   returnPercentage: number;
   
+  // P&L source: manual entry or calculated from trades
+  pnlSource: 'manual' | 'trades';
+  
   // Metadata
   status: 'active' | 'closed';
   notes: string;
@@ -31,6 +34,57 @@ export interface MonthFormInput {
   deposits: string;
   withdrawals: string;
   notes: string;
+}
+
+// Individual Trade Data Model
+export interface Trade {
+  id: string;
+  symbol: string;                    // e.g., "AAPL", "BTC"
+  tradeType: 'long' | 'short';
+  entryDate: string;                 // ISO date string
+  exitDate: string;                  // ISO date string
+  entryPrice: number;
+  exitPrice: number;
+  quantity: number;
+  pnl: number;                       // calculated: (exit - entry) * qty * direction
+  returnPercentage: number;          // calculated
+  notes: string;
+  tags: string[];                    // e.g., ["swing", "earnings"]
+  monthKey: string;                  // links to month: 'YYYY-MM'
+  isWin: boolean;                    // calculated: pnl > 0
+  createdAt: number;
+  updatedAt: number;
+}
+
+// Trade form input (before calculations)
+export interface TradeFormInput {
+  symbol: string;
+  tradeType: 'long' | 'short';
+  entryDate: string;
+  exitDate: string;
+  entryPrice: string;
+  exitPrice: string;
+  quantity: string;
+  notes: string;
+  tags: string;                      // comma-separated
+}
+
+// Trade statistics
+export interface TradeStats {
+  totalTrades: number;
+  winningTrades: number;
+  losingTrades: number;
+  breakEvenTrades: number;
+  totalPnL: number;
+  winRate: number;
+  avgWin: number;
+  avgLoss: number;
+  profitFactor: number;
+  currentStreak: number;             // +N for wins, -N for losses
+  longestWinStreak: number;
+  longestLoseStreak: number;
+  bestTrade: Trade | null;
+  worstTrade: Trade | null;
 }
 
 // Overall statistics

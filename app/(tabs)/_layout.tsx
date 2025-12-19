@@ -20,7 +20,7 @@ export default function TabLayout() {
   const bottomMargin = Math.max(insets.bottom, scale(20));
   
   return (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -61,6 +61,15 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="trades"
+          options={{
+            title: 'Trades',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? "swap-horizontal" : "swap-horizontal-outline"} size={scale(22)} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="calendar"
           options={{
             title: 'Calendar',
@@ -90,10 +99,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="settings"
           options={{
-            title: 'Settings',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? "settings" : "settings-outline"} size={scale(22)} color={color} />
-            ),
+            href: null, // Hide from tab bar, still accessible via router
           }}
         />
       </Tabs>

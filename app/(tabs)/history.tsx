@@ -5,10 +5,8 @@ import React, { useRef, useState } from 'react';
 import { Alert, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { EmptyState } from '../../src/components/EmptyState';
 import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
 import { fonts } from '../../src/config/fonts';
-import { usePrivacy } from '../../src/context/PrivacyContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
 import { formatMonthDisplay, sortMonthsDesc } from '../../src/utils/dateUtils';
@@ -20,7 +18,6 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { months, deleteMonth, loadMonths } = useTrading();
   const { isDark } = useTheme();
-  const { isPrivacyMode } = usePrivacy();
   const [filter, setFilter] = useState<FilterType>('all');
   const [refreshing, setRefreshing] = useState(false);
   
@@ -55,6 +52,7 @@ export default function HistoryScreen() {
             try {
               await deleteMonth(id);
             } catch (error) {
+              console.error('Failed to delete month', error);
               Alert.alert('Error', 'Failed to delete month');
             }
           }
@@ -156,7 +154,7 @@ export default function HistoryScreen() {
   };
   
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }}>
       {/* Header */}
       <View style={{ paddingHorizontal: scale(20), paddingTop: scale(16), paddingBottom: scale(16) }}>
         <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(32), color: themeColors.text }}>History</Text>
@@ -168,35 +166,73 @@ export default function HistoryScreen() {
       {/* Stats Cards */}
       <View style={{ flexDirection: 'row', paddingHorizontal: scale(20), gap: scale(12), marginBottom: scale(16) }}>
         <LinearGradient
-          colors={isDark ? ['#0D3D2B', '#0A2E21'] : ['#10B95F', '#059669']}
+          colors={isDark ? ['#1a5d3a', '#0f3522'] : ['#10B95F', '#047857']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ flex: 1, borderRadius: scale(20), padding: scale(20) }}
+          style={{ 
+            flex: 1, 
+            borderRadius: scale(24), 
+            padding: scale(20),
+            shadowColor: '#10B95F',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 25,
+            elevation: 12,
+            borderWidth: 1,
+            borderColor: isDark ? 'rgba(16, 185, 95, 0.5)' : 'rgba(255, 255, 255, 0.2)',
+          }}
         >
+          {/* Decorative shine */}
+          <View style={{ position: 'absolute', top: -30, right: -30, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+          
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(12) }}>
-            <View style={{ width: scale(32), height: scale(32), borderRadius: scale(10), backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name="trending-up" size={scale(18)} color="#FFFFFF" />
+            <View style={{ 
+              width: scale(36), height: scale(36), borderRadius: scale(12), 
+              backgroundColor: 'rgba(255,255,255,0.2)', 
+              justifyContent: 'center', alignItems: 'center',
+              borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)'
+            }}>
+              <Ionicons name="trending-up" size={scale(20)} color="#FFFFFF" />
             </View>
-            <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.profit : '#FFFFFF' }}>Total Gain</Text>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: '#FFFFFF', opacity: 0.9 }}>Total Gain</Text>
           </View>
-          <PrivacyAwareText value={totalProfit} format={(val) => formatCurrency(val)} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.profit : '#FFFFFF' }} maskedValue="••••••" numberOfLines={1} adjustsFontSizeToFit />
-          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{profitCount} winning months</Text>
+          <PrivacyAwareText value={totalProfit} format={(val) => formatCurrency(val)} style={{ fontFamily: fonts.extraBold, fontSize: fontScale(28), color: '#FFFFFF' }} maskedValue="••••••" numberOfLines={1} adjustsFontSizeToFit />
+          <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: 'rgba(255,255,255,0.7)', marginTop: scale(8) }}>{profitCount} winning months</Text>
         </LinearGradient>
         
         <LinearGradient
-          colors={isDark ? ['#3D1A1A', '#2E1414'] : ['#EF4444', '#DC2626']}
+          colors={isDark ? ['#5c1c1c', '#360f0f'] : ['#EF4444', '#B91C1C']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ flex: 1, borderRadius: scale(20), padding: scale(20) }}
+          style={{ 
+            flex: 1, 
+            borderRadius: scale(24), 
+            padding: scale(20),
+            shadowColor: '#EF4444',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 25,
+            elevation: 12,
+            borderWidth: 1,
+            borderColor: isDark ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.2)',
+          }}
         >
+          {/* Decorative shine */}
+          <View style={{ position: 'absolute', top: -30, right: -30, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginBottom: scale(12) }}>
-            <View style={{ width: scale(32), height: scale(32), borderRadius: scale(10), backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name="trending-down" size={scale(18)} color="#FFFFFF" />
+            <View style={{ 
+              width: scale(36), height: scale(36), borderRadius: scale(12), 
+              backgroundColor: 'rgba(255,255,255,0.2)', 
+              justifyContent: 'center', alignItems: 'center',
+              borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)'
+            }}>
+              <Ionicons name="trending-down" size={scale(20)} color="#FFFFFF" />
             </View>
-            <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: isDark ? colors.loss : '#FFFFFF' }}>Total Loss</Text>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: '#FFFFFF', opacity: 0.9 }}>Total Loss</Text>
           </View>
-          <PrivacyAwareText value={totalLoss} format={(val) => `-${formatCurrency(val)}`} style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? colors.loss : '#FFFFFF' }} maskedValue="-••••••" numberOfLines={1} adjustsFontSizeToFit />
-          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: isDark ? themeColors.textMuted : 'rgba(255,255,255,0.8)', marginTop: scale(6) }}>{lossCount} losing months</Text>
+          <PrivacyAwareText value={totalLoss} format={(val) => `-${formatCurrency(val)}`} style={{ fontFamily: fonts.extraBold, fontSize: fontScale(28), color: '#FFFFFF' }} maskedValue="-••••••" numberOfLines={1} adjustsFontSizeToFit />
+          <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: 'rgba(255,255,255,0.7)', marginTop: scale(8) }}>{lossCount} losing months</Text>
         </LinearGradient>
       </View>
       
@@ -208,13 +244,65 @@ export default function HistoryScreen() {
       </View>
       
       {months.length === 0 ? (
-        <EmptyState
-          title="No History"
-          message="Your monthly trading records will appear here"
-          actionLabel="Add First Month"
-          onAction={() => router.push('/add-month')}
-          icon="calendar"
-        />
+        <View style={{ flex: 1, paddingHorizontal: scale(20), paddingTop: scale(20) }}>
+          <View style={{ flexDirection: 'row', height: '100%' }}>
+            {/* Timeline Line */}
+            <View style={{ width: 2, backgroundColor: themeColors.border, marginRight: scale(24), marginLeft: scale(10), height: '80%', opacity: 0.5 }}>
+              <View style={{ 
+                width: scale(12), height: scale(12), borderRadius: scale(6), 
+                backgroundColor: '#10B95F', 
+                position: 'absolute', top: 0, left: -scale(5),
+                shadowColor: '#10B95F', shadowOffset: {width: 0, height: 0}, shadowRadius: 8, shadowOpacity: 0.8, elevation: 8
+              }} />
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <View style={{ marginBottom: scale(32) }}>
+                <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, marginBottom: scale(4) }}> 
+                  Your Journey Begins
+                </Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, lineHeight: fontScale(20) }}>
+                  Your trading timeline is a blank canvas. Start filling it with your wins and lessons.
+                </Text>
+              </View>
+
+              <TouchableOpacity 
+                activeOpacity={0.8}
+                onPress={() => router.push('/add-month')}
+                style={{
+                  borderRadius: scale(20),
+                  borderWidth: 1,
+                  borderColor: '#10B95F',
+                  borderStyle: 'dashed',
+                  backgroundColor: isDark ? 'rgba(16, 185, 95, 0.05)' : 'rgba(16, 185, 95, 0.02)',
+                  padding: scale(24),
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: scale(12)
+                }}
+              >
+                <View style={{ 
+                  width: scale(48), height: scale(48), borderRadius: scale(24), 
+                  backgroundColor: 'rgba(16, 185, 95, 0.1)', 
+                  justifyContent: 'center', alignItems: 'center',
+                  borderWidth: 1, borderColor: 'rgba(16, 185, 95, 0.2)'
+                }}>
+                  <Ionicons name="add" size={scale(24)} color="#10B95F" />
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: '#10B95F' }}>Log First Month</Text>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted, marginTop: scale(4) }}>Kickstart your history</Text>
+                </View>
+              </TouchableOpacity>
+              
+              {/* Ghost Items for immersion */}
+              <View style={{ marginTop: scale(24), opacity: 0.3 }}>
+                 <View style={{ height: scale(80), borderRadius: scale(16), backgroundColor: themeColors.card, marginBottom: scale(12) }} />
+                 <View style={{ height: scale(80), borderRadius: scale(16), backgroundColor: themeColors.card }} />
+              </View>
+            </View>
+          </View>
+        </View>
       ) : (
         /* Months List Grouped by Year */
         <FlatList

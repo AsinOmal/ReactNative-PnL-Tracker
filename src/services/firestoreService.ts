@@ -8,9 +8,10 @@ import {
     query,
     setDoc,
     Unsubscribe,
+    where,
 } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
-import { MonthRecord } from '../types';
+import { MonthRecord, Trade } from '../types';
 
 /**
  * Get the months collection reference for a user
@@ -101,4 +102,88 @@ export function subscribeToUserProfile(userId: string, callback: (data: any) => 
             callback(null);
         }
     });
+}
+
+// ============================================
+// TRADES COLLECTION
+// ============================================
+
+/**
+ * Get the trades collection reference for a user
+ */
+function getTradesCollection(userId: string) {
+  return collection(db, 'users', userId, 'trades');
+}
+
+/**
+ * Get the document reference for a specific trade
+ */
+function getTradeDoc(userId: string, tradeId: string) {
+  return doc(db, 'users', userId, 'trades', tradeId);
+}
+
+/**
+ * Get all trades for a user
+ */
+export async function getTrades(userId: string): Promise<Trade[]> {
+  const tradesRef = getTradesCollection(userId);
+  const q = query(tradesRef, orderBy('exitDate', 'desc'));
+  const snapshot = await getDocs(q);
+  
+  return snapshot.docs.map(doc => ({
+    ...doc.data(),
+    id: doc.id,
+  })) as Trade[];
+}
+
+/**
+ * Get trades for a specific month
+ */
+export async function getTradesByMonth(userId: string, monthKey: string): Promise<Trade[]> {
+  const tradesRef = getTradesCollection(userId);
+  const q = query(tradesRef, where('monthKey', '==', monthKey), orderBy('exitDate', 'desc'));
+  const snapshot = await getDocs(q);
+  
+  return snapshot.docs.map(doc => ({
+    ...doc.data(),
+    id: doc.id,
+  })) as Trade[];
+}
+
+/**
+ * Save a trade (create or update)
+ */
+export async function saveTrade(userId: string, trade: Trade): Promise<void> {
+  const tradeRef = getTradeDoc(userId, trade.id);
+  await setDoc(tradeRef, {
+    ...trade,
+    updatedAt: Date.now(),
+  });
+}
+
+/**
+ * Delete a trade
+ */
+export async function deleteTradeFromFirestore(userId: string, tradeId: string): Promise<void> {
+  const tradeRef = getTradeDoc(userId, tradeId);
+  await deleteDoc(tradeRef);
+}
+
+/**
+ * Subscribe to real-time updates for a user's trades
+ */
+export function subscribeToTrades(
+  userId: string,
+  callback: (trades: Trade[]) => void
+): Unsubscribe {
+  const tradesRef = getTradesCollection(userId);
+  const q = query(tradesRef, orderBy('exitDate', 'desc'));
+  
+  return onSnapshot(q, (snapshot) => {
+    const trades = snapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id,
+    })) as Trade[];
+    callback(trades);
+  });
 }

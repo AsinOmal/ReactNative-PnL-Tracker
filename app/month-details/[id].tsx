@@ -3,15 +3,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../../src/config/fonts';
@@ -38,6 +38,7 @@ export default function MonthDetailsScreen() {
   const [withdrawals, setWithdrawals] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
   
   const colors = {
@@ -88,8 +89,6 @@ export default function MonthDetailsScreen() {
     );
   }
   
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   const validateField = (field: string, value: string) => {
     let error = '';
     const numValue = parseCurrency(value);

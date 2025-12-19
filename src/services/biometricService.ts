@@ -67,7 +67,7 @@ export async function authenticateWithBiometrics(
     
     return {
       success: result.success,
-      error: result.error,
+      error: !result.success ? result.error : undefined,
     };
   } catch (err) {
     return {

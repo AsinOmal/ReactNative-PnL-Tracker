@@ -13,6 +13,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../../src/config/fonts';
 import { useAuth } from '../../src/context/AuthContext';
 import { fontScale, scale } from '../../src/utils/scaling';
 
@@ -41,7 +42,6 @@ export default function LoginScreen() {
       console.log('Login: Success, should navigate to tabs');
     } catch (err: any) {
       console.log('Login: Failed with error', err?.code || err?.message);
-      // Error is handled by AuthContext, stay on this screen
     }
   };
   
@@ -60,7 +60,7 @@ export default function LoginScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Send',
-          onPress: async (inputEmail) => {
+          onPress: async (inputEmail: string | undefined) => {
             if (!inputEmail?.trim()) {
               Alert.alert('Error', 'Please enter your email address.');
               return;
@@ -81,10 +81,10 @@ export default function LoginScreen() {
   };
   
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
         <ScrollView 
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: scale(24), paddingBottom: scale(40) }}
@@ -110,8 +110,8 @@ export default function LoginScreen() {
           
           {/* Header - Centered */}
           <View style={{ alignItems: 'center', marginBottom: scale(24) }}>
-            <Text style={{ fontSize: fontScale(48), fontWeight: '800', color: '#10B95F', textAlign: 'center', marginBottom: scale(8) }}>Login</Text>
-            <Text style={{ fontSize: fontScale(15), color: '#71717A', lineHeight: fontScale(22), textAlign: 'center' }}>
+            <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(48), color: '#10B95F', textAlign: 'center', marginBottom: scale(8) }}>Login</Text>
+            <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: '#71717A', lineHeight: fontScale(22), textAlign: 'center' }}>
               Happy to see you again.{'\n'}Let's track profits.
             </Text>
           </View>
@@ -137,14 +137,14 @@ export default function LoginScreen() {
           {error && (
             <View style={{ flexDirection: 'row', alignItems: 'center', padding: scale(12), borderRadius: scale(12), backgroundColor: 'rgba(239, 68, 68, 0.1)', marginBottom: scale(16), gap: scale(8) }}>
               <Ionicons name="alert-circle" size={scale(18)} color="#EF4444" />
-              <Text style={{ fontSize: fontScale(14), color: '#EF4444', flex: 1 }}>{error}</Text>
+              <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: '#EF4444', flex: 1 }}>{error}</Text>
             </View>
           )}
           
           {/* Form */}
           <View style={{ gap: scale(20), marginBottom: scale(24) }}>
             <View style={{ gap: scale(8) }}>
-              <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: '#71717A', letterSpacing: 1 }}>EMAIL</Text>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#71717A', letterSpacing: 1 }}>EMAIL</Text>
               <View 
                 style={{ 
                   flexDirection: 'row', 
@@ -159,6 +159,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={{ 
                     flex: 1, 
+                    fontFamily: fonts.regular,
                     fontSize: fontScale(16), 
                     color: '#18181B',
                     height: '100%',
@@ -175,7 +176,7 @@ export default function LoginScreen() {
             </View>
             
             <View style={{ gap: scale(8) }}>
-              <Text style={{ fontSize: fontScale(12), fontWeight: '600', color: '#71717A', letterSpacing: 1 }}>PASSWORD</Text>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#71717A', letterSpacing: 1 }}>PASSWORD</Text>
               <View 
                 style={{ 
                   flexDirection: 'row', 
@@ -190,6 +191,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={{ 
                     flex: 1, 
+                    fontFamily: fonts.regular,
                     fontSize: fontScale(16), 
                     color: '#18181B',
                     height: '100%',
@@ -199,6 +201,8 @@ export default function LoginScreen() {
                   placeholder="Password"
                   placeholderTextColor="#A1A1AA"
                   secureTextEntry={!showPassword}
+                  textContentType="oneTimeCode"
+                  autoComplete="off"
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ marginLeft: scale(12) }}>
                   <Ionicons 
@@ -209,6 +213,11 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+            
+            {/* Forgot Password */}
+            <TouchableOpacity onPress={handleForgotPassword} style={{ alignSelf: 'flex-end' }}>
+              <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: '#10B95F' }}>Forgot Password?</Text>
+            </TouchableOpacity>
           </View>
           
           {/* Login Button - Filled */}
@@ -227,23 +236,17 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={{ fontSize: fontScale(18), fontWeight: '700', color: '#FFFFFF' }}>Login</Text>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: '#FFFFFF' }}>Login</Text>
             )}
           </TouchableOpacity>
           
-          {/* Forgot Password & Register */}
-          <View style={{ alignItems: 'center', gap: scale(16) }}>
-            <TouchableOpacity style={{ paddingVertical: scale(8) }} onPress={handleForgotPassword}>
-              <Text style={{ fontSize: fontScale(14), fontWeight: '500', color: '#10B95F' }}>Forgot Password?</Text>
+          {/* Register Link */}
+          <Link href="/auth/register" asChild>
+            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: scale(8), marginTop: 'auto' }}>
+              <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: '#71717A' }}>Don't have an account? </Text>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(14), color: '#10B95F' }}>Sign Up</Text>
             </TouchableOpacity>
-            
-            <Link href="/auth/register" asChild>
-              <TouchableOpacity style={{ flexDirection: 'row', paddingVertical: scale(8) }}>
-                <Text style={{ fontSize: fontScale(14), color: '#71717A' }}>Don't have an account? </Text>
-                <Text style={{ fontSize: fontScale(14), fontWeight: '700', color: '#10B95F' }}>Sign Up</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
+          </Link>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
