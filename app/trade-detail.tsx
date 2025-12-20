@@ -81,8 +81,7 @@ export default function TradeDetailScreen() {
   };
 
   const handleEdit = () => {
-    // TODO: Navigate to edit screen once created
-    Alert.alert('Coming Soon', 'Trade editing will be available soon!');
+    router.push({ pathname: '/edit-trade', params: { id: trade.id } });
   };
   
   const isWin = trade.pnl > 0;

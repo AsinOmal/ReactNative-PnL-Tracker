@@ -27,6 +27,7 @@ import {
     setBiometricEnabled,
 } from '../../src/services/biometricService';
 import { generateAndShareCSV } from '../../src/services/csvService';
+import { exportTradesToCSV } from '../../src/services/exportService';
 import { sendSupportEmail } from '../../src/services/feedbackService';
 import {
     areNotificationsEnabled,
@@ -43,7 +44,7 @@ export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { user, logout } = useAuth();
-  const { months } = useTrading();
+  const { months, trades } = useTrading();
   const router = useRouter();
   const { refreshUser } = useAuth();
   
@@ -165,6 +166,22 @@ export default function SettingsScreen() {
         Alert.alert('Error', err.message);
       } else {
         Alert.alert('Error', 'Failed to export data.');
+      }
+    }
+  };
+  
+  const handleExportTrades = async () => {
+    if (trades.length === 0) {
+      Alert.alert('No Trades', 'You have no trades to export.');
+      return;
+    }
+    try {
+      await exportTradesToCSV(trades);
+    } catch (err) {
+      if (err instanceof Error) {
+        Alert.alert('Error', err.message);
+      } else {
+        Alert.alert('Error', 'Failed to export trades.');
       }
     }
   };
@@ -404,9 +421,16 @@ export default function SettingsScreen() {
             <SettingItem 
               icon="download" 
               iconColor="#3B82F6" 
-              label="Export CSV" 
+              label="Export Months CSV" 
               type="link" 
               onPress={handleExportCSV} 
+            />
+            <SettingItem 
+              icon="swap-horizontal" 
+              iconColor="#FB923C" 
+              label="Export Trades CSV" 
+              type="link" 
+              onPress={handleExportTrades} 
               showBorder={false}
             />
           </View>

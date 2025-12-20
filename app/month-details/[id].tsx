@@ -26,10 +26,11 @@ import { validateMonthForm } from '../../src/utils/validators';
 export default function MonthDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getMonthById, updateMonth, deleteMonth, generatePDF } = useTrading();
+  const { getMonthById, updateMonth, deleteMonth, generatePDF, getTradesByMonth } = useTrading();
   const { isDark } = useTheme();
   
   const month = getMonthById(id!);
+  const monthTrades = month ? getTradesByMonth(month.month) : [];
   
   const [isEditing, setIsEditing] = useState(false);
   const [startingCapital, setStartingCapital] = useState('');
@@ -444,6 +445,75 @@ export default function MonthDetailsScreen() {
                     <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Notes</Text>
                   </View>
                   <Text style={[styles.notesText, { color: colors.text }]}>{month.notes}</Text>
+                </View>
+              )}
+
+              {/* Trades Breakdown */}
+              {monthTrades.length > 0 && (
+                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(251, 146, 60, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                        <Ionicons name="swap-horizontal" size={18} color="#FB923C" />
+                      </View>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Trades ({monthTrades.length})</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => router.push('/(tabs)/trades')}>
+                      <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: '#FB923C' }}>View All</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {monthTrades.slice(0, 5).map((trade, index) => (
+                    <TouchableOpacity 
+                      key={trade.id}
+                      onPress={() => router.push({ pathname: '/trade-detail', params: { id: trade.id } })}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingVertical: 12,
+                        borderTopWidth: index > 0 ? 1 : 0,
+                        borderTopColor: colors.border,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <View style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 8,
+                          backgroundColor: trade.pnl >= 0 ? 'rgba(16, 185, 95, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}>
+                          <Ionicons 
+                            name={trade.pnl >= 0 ? 'trending-up' : 'trending-down'} 
+                            size={16} 
+                            color={trade.pnl >= 0 ? colors.profit : colors.loss} 
+                          />
+                        </View>
+                        <View>
+                          <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: colors.text }}>{trade.symbol}</Text>
+                          <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted }}>
+                            {new Date(trade.exitDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: trade.pnl >= 0 ? colors.profit : colors.loss }}>
+                          {trade.pnl >= 0 ? '+' : ''}${Math.abs(trade.pnl).toFixed(2)}
+                        </Text>
+                        <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted }}>
+                          {trade.returnPercentage >= 0 ? '+' : ''}{trade.returnPercentage.toFixed(1)}%
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                  
+                  {monthTrades.length > 5 && (
+                    <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, textAlign: 'center', paddingTop: 12 }}>
+                      +{monthTrades.length - 5} more trades
+                    </Text>
+                  )}
                 </View>
               )}
 
