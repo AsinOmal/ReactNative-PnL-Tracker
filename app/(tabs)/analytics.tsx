@@ -177,30 +177,42 @@ export default function AnalyticsScreen() {
         
         
         {months.length === 0 && (
-                // Immersive Empty State for Analytics
+                // Immersive Empty State for Analytics - matches Calendar design
                 <View style={{ paddingHorizontal: scale(20), paddingTop: scale(10), marginBottom: scale(20) }}>
-                  <View style={{ 
+                  <LinearGradient
+                    colors={isDark ? ['rgba(99, 102, 241, 0.15)', 'rgba(99, 102, 241, 0.05)'] : ['rgba(99, 102, 241, 0.08)', 'rgba(99, 102, 241, 0.02)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ 
                       borderRadius: scale(24), 
-                      borderWidth: 1, 
-                      borderColor: 'rgba(99, 102, 241, 0.3)', 
-                      borderStyle: 'dashed',
-                      backgroundColor: isDark ? 'rgba(99, 102, 241, 0.05)' : 'rgba(99, 102, 241, 0.02)',
                       padding: scale(32),
-                      alignItems: 'center'
-                  }}>
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {/* Decorative Background Elements */}
+                    <View style={{ position: 'absolute', top: -30, right: -30, width: scale(120), height: scale(120), borderRadius: scale(60), backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)' }} />
+                    <View style={{ position: 'absolute', bottom: -40, left: -20, width: scale(100), height: scale(100), borderRadius: scale(50), backgroundColor: isDark ? 'rgba(99, 102, 241, 0.08)' : 'rgba(99, 102, 241, 0.03)' }} />
+
+                    {/* Main Content */}
                     <View style={{ 
-                      width: scale(64), height: scale(64), borderRadius: scale(32), 
-                      backgroundColor: 'rgba(99, 102, 241, 0.1)', 
+                      width: scale(72), height: scale(72), borderRadius: scale(36), 
+                      backgroundColor: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)', 
                       justifyContent: 'center', alignItems: 'center',
-                      marginBottom: scale(16),
-                      shadowColor: '#6366F1', shadowOffset: {width: 0, height: 0}, shadowRadius: 16, shadowOpacity: 0.5, elevation: 8
+                      marginBottom: scale(20),
+                      borderWidth: 1, borderColor: isDark ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.15)',
                     }}>
-                      <Ionicons name="analytics" size={scale(32)} color="#6366F1" />
+                      <Ionicons name="analytics" size={scale(36)} color="#6366F1" />
                     </View>
-                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(18), color: themeColors.text, marginBottom: scale(8), textAlign: 'center' }}>
+                    
+                    <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(22), color: themeColors.text, marginBottom: scale(10), textAlign: 'center' }}>
                       Unlock Your Analytics
                     </Text>
-                    <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, textAlign: 'center', lineHeight: fontScale(22), marginBottom: scale(24) }}>
+                    
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(15), color: themeColors.textMuted, textAlign: 'center', lineHeight: fontScale(24), marginBottom: scale(28) }}>
                       Log your first month to reveal powerful insights, win rates, and performance trends.
                     </Text>
                     
@@ -209,24 +221,23 @@ export default function AnalyticsScreen() {
                       activeOpacity={0.8}
                       style={{
                         backgroundColor: '#6366F1',
-                        paddingHorizontal: scale(24),
-                        paddingVertical: scale(12),
-                        borderRadius: scale(16),
+                        paddingHorizontal: scale(28),
+                        paddingVertical: scale(14),
+                        borderRadius: scale(18),
                         shadowColor: '#6366F1',
                         shadowOffset: { width: 0, height: 4 },
                         shadowOpacity: 0.3,
                         shadowRadius: 8,
-                        elevation: 4,
+                        elevation: 5,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: scale(8)
+                        gap: scale(10)
                       }}
                     >
-                      <Ionicons name="add-circle-outline" size={scale(20)} color="#FFFFFF" />
-                      <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: '#FFFFFF' }}>Log Data Now</Text>
+                      <Ionicons name="add-circle" size={scale(22)} color="#FFFFFF" />
+                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(15), color: '#FFFFFF' }}>Log Data Now</Text>
                     </TouchableOpacity>
-                  </View>
-                  
+                  </LinearGradient>
                 </View>
         )}
 

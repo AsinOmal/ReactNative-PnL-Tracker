@@ -210,78 +210,62 @@ export default function TradesScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FB923C" />}
     >
       <LinearGradient
-        colors={isDark ? ['rgba(251, 146, 60, 0.12)', 'rgba(251, 146, 60, 0.03)'] : ['rgba(251, 146, 60, 0.08)', 'rgba(251, 146, 60, 0.02)']}
+        colors={isDark ? ['rgba(251, 146, 60, 0.15)', 'rgba(251, 146, 60, 0.05)'] : ['rgba(251, 146, 60, 0.08)', 'rgba(251, 146, 60, 0.02)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ 
           borderRadius: scale(24),
-          padding: scale(28),
-          borderWidth: 1,
-          borderColor: 'rgba(251, 146, 60, 0.15)',
+          padding: scale(32),
           alignItems: 'center',
+          borderWidth: 1,
+          borderColor: isDark ? 'rgba(251, 146, 60, 0.2)' : 'rgba(251, 146, 60, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
         }}
       >
-        {/* Glowing Icon Container */}
+        {/* Decorative Background Elements */}
+        <View style={{ position: 'absolute', top: -30, right: -30, width: scale(120), height: scale(120), borderRadius: scale(60), backgroundColor: isDark ? 'rgba(251, 146, 60, 0.1)' : 'rgba(251, 146, 60, 0.05)' }} />
+        <View style={{ position: 'absolute', bottom: -40, left: -20, width: scale(100), height: scale(100), borderRadius: scale(50), backgroundColor: isDark ? 'rgba(251, 146, 60, 0.08)' : 'rgba(251, 146, 60, 0.03)' }} />
+
+        {/* Main Content */}
         <View style={{ 
-          width: scale(72), 
-          height: scale(72), 
-          borderRadius: scale(22), 
-          backgroundColor: '#FB923C',
-          justifyContent: 'center',
-          alignItems: 'center',
+          width: scale(72), height: scale(72), borderRadius: scale(36), 
+          backgroundColor: isDark ? 'rgba(251, 146, 60, 0.15)' : 'rgba(251, 146, 60, 0.08)', 
+          justifyContent: 'center', alignItems: 'center',
           marginBottom: scale(20),
-          shadowColor: '#FB923C',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.6,
-          shadowRadius: 20,
-          elevation: 10,
+          borderWidth: 1, borderColor: isDark ? 'rgba(251, 146, 60, 0.3)' : 'rgba(251, 146, 60, 0.15)',
         }}>
-          <Ionicons name="swap-horizontal" size={scale(36)} color="#FFFFFF" />
+          <Ionicons name="swap-horizontal" size={scale(36)} color="#FB923C" />
         </View>
         
-        <Text style={{ 
-          fontFamily: fonts.bold, 
-          fontSize: fontScale(24), 
-          color: themeColors.text, 
-          marginBottom: scale(10),
-          textAlign: 'center',
-        }}>
+        <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(22), color: themeColors.text, marginBottom: scale(10), textAlign: 'center' }}>
           No Trades Yet
         </Text>
         
-        <Text style={{ 
-          fontFamily: fonts.regular, 
-          fontSize: fontScale(15), 
-          color: themeColors.textMuted, 
-          lineHeight: fontScale(24), 
-          textAlign: 'center',
-          marginBottom: scale(28),
-          paddingHorizontal: scale(10),
-        }}>
+        <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(15), color: themeColors.textMuted, textAlign: 'center', lineHeight: fontScale(24), marginBottom: scale(28) }}>
           Log individual trades to track performance, analyze by symbol, and see win/loss streaks.
         </Text>
         
         <TouchableOpacity
           onPress={() => router.push('/add-trade')}
-          style={{ width: '100%' }}
+          activeOpacity={0.8}
+          style={{
+            backgroundColor: '#FB923C',
+            paddingHorizontal: scale(28),
+            paddingVertical: scale(14),
+            borderRadius: scale(18),
+            shadowColor: '#FB923C',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 5,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: scale(10)
+          }}
         >
-          <LinearGradient
-            colors={['#FB923C', '#F97316']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{
-              paddingVertical: scale(15),
-              borderRadius: scale(14),
-              alignItems: 'center',
-              shadowColor: '#FB923C',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 4,
-            }}
-          >
-            <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: '#FFFFFF' }}>Add First Trade</Text>
-          </LinearGradient>
+          <Ionicons name="add-circle" size={scale(22)} color="#FFFFFF" />
+          <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(15), color: '#FFFFFF' }}>Add First Trade</Text>
         </TouchableOpacity>
       </LinearGradient>
     </ScrollView>
