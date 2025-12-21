@@ -44,7 +44,7 @@ export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { user, logout } = useAuth();
-  const { months, trades } = useTrading();
+  const { months, trades, yearlyGoal, setYearlyGoal } = useTrading();
   const router = useRouter();
   const { refreshUser } = useAuth();
   
@@ -68,6 +68,15 @@ export default function SettingsScreen() {
     minute: 0,
     enabled: false,
   });
+  
+  // Yearly Goal state
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [localGoal, setLocalGoal] = useState(yearlyGoal.toString());
+  
+  // Sync localGoal when yearlyGoal changes
+  useEffect(() => {
+    setLocalGoal(yearlyGoal > 0 ? yearlyGoal.toLocaleString() : '');
+  }, [yearlyGoal]);
   
   useEffect(() => {
     const checkSettings = async () => {
@@ -344,6 +353,79 @@ export default function SettingsScreen() {
 
             </View>
             </LinearGradient>
+        </View>
+        
+        {/* Goals Section */}
+        <View style={{ marginBottom: scale(24) }}>
+          <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginHorizontal: scale(24), marginBottom: scale(8) }}>Goals</Text>
+          <View style={{ marginHorizontal: scale(20), backgroundColor: themeColors.card, borderRadius: scale(16), overflow: 'hidden', borderWidth: 1, borderColor: themeColors.border }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: scale(16), paddingHorizontal: scale(16) }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(12) }}>
+                <View style={{ width: scale(24), height: scale(24), justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="flag" size={scale(22)} color="#6366F1" style={{ opacity: 0.85 }} />
+                </View>
+                <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: themeColors.text }}>Yearly Goal</Text>
+              </View>
+              
+              {editingGoal ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text }}>$</Text>
+                  <TextInput
+                    style={{ 
+                      fontFamily: fonts.semiBold, 
+                      fontSize: fontScale(16), 
+                      color: themeColors.text, 
+                      borderBottomWidth: 1, 
+                      borderBottomColor: '#6366F1',
+                      minWidth: scale(80),
+                      paddingVertical: scale(4),
+                    }}
+                    value={localGoal}
+                    onChangeText={(text) => {
+                      // Remove non-numeric characters except for the input
+                      const numericValue = text.replace(/[^0-9]/g, '');
+                      // Format with commas
+                      const formattedValue = numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                      setLocalGoal(formattedValue);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="10,000"
+                    placeholderTextColor={themeColors.textMuted}
+                    autoFocus
+                    onBlur={async () => {
+                      setEditingGoal(false);
+                      const goalValue = parseFloat(localGoal.replace(/,/g, '')) || 0;
+                      if (goalValue !== yearlyGoal) {
+                        await setYearlyGoal(goalValue);
+                      }
+                    }}
+                    onSubmitEditing={async () => {
+                      setEditingGoal(false);
+                      const goalValue = parseFloat(localGoal.replace(/,/g, '')) || 0;
+                      if (goalValue !== yearlyGoal) {
+                        await setYearlyGoal(goalValue);
+                      }
+                    }}
+                    returnKeyType="done"
+                  />
+                </View>
+              ) : (
+                <TouchableOpacity 
+                  onPress={() => setEditingGoal(true)}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}
+                >
+                  {yearlyGoal > 0 ? (
+                    <View style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', paddingHorizontal: scale(10), paddingVertical: scale(4), borderRadius: scale(8) }}>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: '#6366F1' }}>${yearlyGoal.toLocaleString()}</Text>
+                    </View>
+                  ) : (
+                    <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted }}>Set goal</Text>
+                  )}
+                  <Ionicons name="pencil" size={scale(16)} color={themeColors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         </View>
         
         {/* Appearance Section */}

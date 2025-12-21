@@ -267,13 +267,15 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       setError(null);
       const month = months.find(m => m.id === monthId);
       if (!month) throw new Error('Month not found');
-      await generateAndSharePDF(month);
+      // Get trades for this month
+      const monthTrades = trades.filter(t => t.monthKey === month.month);
+      await generateAndSharePDF(month, monthTrades);
     } catch (err) {
       setError('Failed to generate PDF');
       console.error('Generate PDF error:', err);
       throw err;
     }
-  }, [months]);
+  }, [months, trades]);
   
   const getMonthByIdAction = useCallback((id: string) => {
     return months.find(m => m.id === id);

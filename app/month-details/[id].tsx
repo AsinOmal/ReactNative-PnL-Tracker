@@ -410,44 +410,6 @@ export default function MonthDetailsScreen() {
                 </View>
               </View>
 
-              {/* Cash Flow Card */}
-              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(16, 185, 95, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
-                    <Ionicons name="swap-vertical-outline" size={18} color="#10B95F" />
-                  </View>
-                  <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Cash Flow</Text>
-                </View>
-                
-                <View style={styles.cardRow}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="arrow-down-circle" size={18} color={colors.profit} />
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Deposits</Text>
-                  </View>
-                  <Text style={[styles.cardValue, { color: colors.profit }]}>+{formatCurrency(month.deposits)}</Text>
-                </View>
-                <View style={styles.cardRow}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="arrow-up-circle" size={18} color={colors.loss} />
-                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Withdrawals</Text>
-                  </View>
-                  <Text style={[styles.cardValue, { color: colors.loss }]}>-{formatCurrency(month.withdrawals)}</Text>
-                </View>
-              </View>
-
-              {/* Notes */}
-              {month.notes && (
-                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(251, 191, 36, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
-                      <Ionicons name="document-text-outline" size={18} color="#FBBF24" />
-                    </View>
-                    <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Notes</Text>
-                  </View>
-                  <Text style={[styles.notesText, { color: colors.text }]}>{month.notes}</Text>
-                </View>
-              )}
-
               {/* Trades Breakdown */}
               {monthTrades.length > 0 && (
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
@@ -514,6 +476,44 @@ export default function MonthDetailsScreen() {
                       +{monthTrades.length - 5} more trades
                     </Text>
                   )}
+                </View>
+              )}
+
+              {/* Cash Flow Card */}
+              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(16, 185, 95, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="swap-vertical-outline" size={18} color="#10B95F" />
+                  </View>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Cash Flow</Text>
+                </View>
+                
+                <View style={styles.cardRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="arrow-down-circle" size={18} color={colors.profit} />
+                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Deposits</Text>
+                  </View>
+                  <Text style={[styles.cardValue, { color: colors.profit }]}>+{formatCurrency(month.deposits)}</Text>
+                </View>
+                <View style={styles.cardRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="arrow-up-circle" size={18} color={colors.loss} />
+                    <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Withdrawals</Text>
+                  </View>
+                  <Text style={[styles.cardValue, { color: colors.loss }]}>-{formatCurrency(month.withdrawals)}</Text>
+                </View>
+              </View>
+
+              {/* Notes */}
+              {month.notes && (
+                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 16 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(251, 191, 36, 0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons name="document-text-outline" size={18} color="#FBBF24" />
+                    </View>
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: colors.text }}>Notes</Text>
+                  </View>
+                  <Text style={[styles.notesText, { color: colors.text }]}>{month.notes}</Text>
                 </View>
               )}
 

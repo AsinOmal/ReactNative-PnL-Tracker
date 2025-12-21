@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -310,8 +311,17 @@ export default function TradesScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FB923C" />}
           ListHeaderComponent={() => (
             <>
-              {/* Hero P&L Card */}
-              <View style={{ marginBottom: scale(20) }}>
+              {/* Hero P&L Card with Streak */}
+              <TouchableOpacity 
+                activeOpacity={0.9}
+                onPress={() => {
+                  if (Math.abs(tradeStats.currentStreak) >= 3) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setFilter(tradeStats.currentStreak > 0 ? 'wins' : 'losses');
+                  }
+                }}
+                style={{ marginBottom: scale(20) }}
+              >
                 <LinearGradient
                   colors={tradeStats.totalPnL >= 0 ? ['#FB923C', '#F97316'] : ['#EF4444', '#DC2626']}
                   start={{ x: 0, y: 0 }}
@@ -330,6 +340,31 @@ export default function TradesScreen() {
                   {/* Decorative circles */}
                   <View style={{ position: 'absolute', top: -40, right: -40, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.1)' }} />
                   <View style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                  
+                  {/* Streak Badge - Top Right */}
+                  {Math.abs(tradeStats.currentStreak) >= 3 && (
+                    <View style={{
+                      position: 'absolute',
+                      top: scale(16),
+                      right: scale(16),
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(255,255,255,0.2)',
+                      paddingHorizontal: scale(12),
+                      paddingVertical: scale(6),
+                      borderRadius: scale(20),
+                      gap: scale(6),
+                    }}>
+                      <Ionicons 
+                        name={tradeStats.currentStreak > 0 ? 'flame' : 'snow'} 
+                        size={scale(16)} 
+                        color="#FFFFFF" 
+                      />
+                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(13), color: '#FFFFFF' }}>
+                        {Math.abs(tradeStats.currentStreak)} {tradeStats.currentStreak > 0 ? 'Win' : 'Loss'} Streak
+                      </Text>
+                    </View>
+                  )}
                   
                   <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: 'rgba(255,255,255,0.8)', marginBottom: scale(4) }}>Total Trade P&L</Text>
                   <Text style={{ fontFamily: fonts.extraBold, fontSize: fontScale(38), color: '#FFFFFF', marginBottom: scale(16) }}>
@@ -353,37 +388,7 @@ export default function TradesScreen() {
                     </View>
                   </View>
                 </LinearGradient>
-              </View>
-              
-              {/* Streak Badge */}
-              {Math.abs(tradeStats.currentStreak) >= 3 && (
-                <View style={{ marginBottom: scale(16) }}>
-                  <View style={{ 
-                    flexDirection: 'row', 
-                    alignItems: 'center', 
-                    backgroundColor: tradeStats.currentStreak > 0 ? 'rgba(16, 185, 95, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                    borderRadius: scale(14), 
-                    padding: scale(14), 
-                    gap: scale(10),
-                    borderWidth: 1,
-                    borderColor: tradeStats.currentStreak > 0 ? 'rgba(16, 185, 95, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  }}>
-                    <Ionicons 
-                      name={tradeStats.currentStreak > 0 ? 'flame' : 'snow'} 
-                      size={scale(22)} 
-                      color={tradeStats.currentStreak > 0 ? '#10B95F' : '#EF4444'} 
-                    />
-                    <Text style={{ 
-                      fontFamily: fonts.semiBold, 
-                      fontSize: fontScale(14), 
-                      color: tradeStats.currentStreak > 0 ? '#10B95F' : '#EF4444',
-                      flex: 1,
-                    }}>
-                      {Math.abs(tradeStats.currentStreak)} Trade {tradeStats.currentStreak > 0 ? 'Win' : 'Loss'} Streak!
-                    </Text>
-                  </View>
-                </View>
-              )}
+              </TouchableOpacity>
               
               {/* Filter Bar */}
               <View style={{

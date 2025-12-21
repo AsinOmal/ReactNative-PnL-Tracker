@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AIInsightsModal } from '../../src/components/AIInsightsModal';
+
 import { MonthCard } from '../../src/components/MonthCard';
 import { PrivacyAwareText } from '../../src/components/PrivacyAwareText';
 import { Skeleton, SkeletonHeroCard, SkeletonMonthCard } from '../../src/components/SkeletonLoader';
@@ -231,13 +231,13 @@ Consistency is the key to success. You're proving it!
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { months, stats, isLoading, loadMonths, getRecentMonths, trades, getTradesByMonth } = useTrading();
+  const { months, stats, isLoading, loadMonths, getRecentMonths, trades, getTradesByMonth, yearlyGoal } = useTrading();
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const [refreshing, setRefreshing] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
-  const [showAIInsights, setShowAIInsights] = useState(false);
+
   
   // Typing animation state
   const [typedGreeting, setTypedGreeting] = useState('');
@@ -349,11 +349,7 @@ export default function HomeScreen() {
         isDark={isDark}
       />
       
-      {/* AI Insights Modal */}
-      <AIInsightsModal
-        visible={showAIInsights}
-        onClose={() => setShowAIInsights(false)}
-      />
+
       
       <ScrollView 
         style={{ flex: 1 }}
@@ -601,6 +597,91 @@ export default function HomeScreen() {
           </LinearGradient>
         </View>
         
+        {/* Goal Progress Card - Only show when goal is set */}
+        {yearlyGoal > 0 && (
+          <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
+            <TouchableOpacity 
+              onPress={() => router.push('/(tabs)/settings')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={isDark ? ['rgba(99, 102, 241, 0.15)', 'rgba(139, 92, 246, 0.1)'] : ['rgba(99, 102, 241, 0.1)', 'rgba(139, 92, 246, 0.05)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ 
+                  borderRadius: scale(20), 
+                  padding: scale(20),
+                  borderWidth: 1,
+                  borderColor: 'rgba(99, 102, 241, 0.2)',
+                }}
+              >
+                {/* Decorative bubbles */}
+                <View style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(99, 102, 241, 0.1)' }} />
+                <View style={{ position: 'absolute', bottom: -15, left: -15, width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(139, 92, 246, 0.08)' }} />
+                
+                {/* Header */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(14) }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+                    <View style={{ width: scale(36), height: scale(36), borderRadius: scale(10), backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons name="flag" size={scale(18)} color="#FFFFFF" />
+                    </View>
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: themeColors.text }}>
+                      {new Date().getFullYear()} Goal
+                    </Text>
+                  </View>
+                  <View style={[
+                    { paddingHorizontal: scale(12), paddingVertical: scale(6), borderRadius: scale(12) },
+                    { backgroundColor: stats.totalProfitLoss >= yearlyGoal ? 'rgba(16, 185, 95, 0.2)' : stats.totalProfitLoss >= yearlyGoal * 0.5 ? 'rgba(251, 146, 60, 0.2)' : 'rgba(99, 102, 241, 0.2)' }
+                  ]}>
+                    <Text style={{ 
+                      fontFamily: fonts.bold, 
+                      fontSize: fontScale(14), 
+                      color: stats.totalProfitLoss >= yearlyGoal ? '#10B95F' : stats.totalProfitLoss >= yearlyGoal * 0.5 ? '#FB923C' : '#6366F1' 
+                    }}>
+                      {Math.min(100, Math.max(0, (stats.totalProfitLoss / yearlyGoal) * 100)).toFixed(0)}%
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Progress Bar */}
+                <View style={{ marginBottom: scale(12) }}>
+                  <View style={{ height: scale(10), backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)', borderRadius: scale(5), overflow: 'hidden' }}>
+                    <LinearGradient
+                      colors={stats.totalProfitLoss >= yearlyGoal ? ['#10B95F', '#059669'] : stats.totalProfitLoss >= yearlyGoal * 0.5 ? ['#FB923C', '#F97316'] : ['#6366F1', '#8B5CF6']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{ 
+                        height: '100%', 
+                        width: `${Math.min(100, Math.max(0, (stats.totalProfitLoss / yearlyGoal) * 100))}%`,
+                        borderRadius: scale(5),
+                      }} 
+                    />
+                  </View>
+                </View>
+                
+                {/* Values */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <View>
+                    <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(2) }}>Current</Text>
+                    <PrivacyAwareText 
+                      value={stats.totalProfitLoss}
+                      format={(val) => formatCurrency(val, true)}
+                      style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: stats.totalProfitLoss >= 0 ? '#10B95F' : '#EF4444' }}
+                      maskedValue="••••"
+                    />
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(2) }}>Target</Text>
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(18), color: themeColors.text }}>
+                      ${yearlyGoal.toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Streak Badge (if any) - Now Tappable */}
         {streak > 0 && (
           <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
@@ -628,34 +709,66 @@ export default function HomeScreen() {
           <View style={{ flexDirection: 'row', gap: scale(10), flexWrap: 'wrap' }}>
             <TouchableOpacity 
               onPress={() => router.push('/add-month')}
-              style={{ flex: 1, minWidth: '45%', backgroundColor: 'rgba(16, 185, 95, 0.15)', borderRadius: scale(16), padding: scale(14), alignItems: 'center', gap: scale(8) }}
+              activeOpacity={0.8}
+              style={{ flex: 1, minWidth: '45%' }}
             >
-              <Ionicons name="calendar" size={scale(28)} color="#10B95F" style={{ opacity: 0.9 }} />
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#10B95F' }}>Add Month</Text>
+              <LinearGradient
+                colors={['rgba(16, 185, 95, 0.18)', 'rgba(16, 185, 95, 0.08)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(8), borderWidth: 1, borderColor: 'rgba(16, 185, 95, 0.2)' }}
+              >
+                <Ionicons name="calendar" size={scale(28)} color="#10B95F" />
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#10B95F' }}>Add Month</Text>
+              </LinearGradient>
             </TouchableOpacity>
             
             <TouchableOpacity 
               onPress={() => router.push('/add-trade')}
-              style={{ flex: 1, minWidth: '45%', backgroundColor: 'rgba(251, 146, 60, 0.15)', borderRadius: scale(16), padding: scale(14), alignItems: 'center', gap: scale(8) }}
+              activeOpacity={0.8}
+              style={{ flex: 1, minWidth: '45%' }}
             >
-              <Ionicons name="swap-horizontal" size={scale(28)} color="#FB923C" style={{ opacity: 0.9 }} />
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#FB923C' }}>Add Trade</Text>
+              <LinearGradient
+                colors={['rgba(251, 146, 60, 0.18)', 'rgba(251, 146, 60, 0.08)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(8), borderWidth: 1, borderColor: 'rgba(251, 146, 60, 0.2)' }}
+              >
+                <Ionicons name="swap-horizontal" size={scale(28)} color="#FB923C" />
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#FB923C' }}>Add Trade</Text>
+              </LinearGradient>
             </TouchableOpacity>
             
             <TouchableOpacity 
               onPress={() => router.push('/compare')}
-              style={{ flex: 1, minWidth: '45%', backgroundColor: 'rgba(99, 102, 241, 0.15)', borderRadius: scale(16), padding: scale(14), alignItems: 'center', gap: scale(8) }}
+              activeOpacity={0.8}
+              style={{ flex: 1, minWidth: '45%' }}
             >
-              <Ionicons name="git-compare" size={scale(28)} color="#6366F1" style={{ opacity: 0.9 }} />
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#6366F1' }}>Compare</Text>
+              <LinearGradient
+                colors={['rgba(99, 102, 241, 0.18)', 'rgba(99, 102, 241, 0.08)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(8), borderWidth: 1, borderColor: 'rgba(99, 102, 241, 0.2)' }}
+              >
+                <Ionicons name="git-compare" size={scale(28)} color="#6366F1" />
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#6366F1' }}>Compare</Text>
+              </LinearGradient>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              onPress={() => setShowAIInsights(true)}
-              style={{ flex: 1, minWidth: '45%', backgroundColor: 'rgba(225, 29, 72, 0.15)', borderRadius: scale(16), padding: scale(14), alignItems: 'center', gap: scale(8) }}
+              onPress={() => router.push('/(tabs)/analytics')}
+              activeOpacity={0.8}
+              style={{ flex: 1, minWidth: '45%' }}
             >
-              <Ionicons name="sparkles" size={scale(28)} color="#E11D48" style={{ opacity: 0.9 }} />
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#E11D48' }}>AI Insights</Text>
+              <LinearGradient
+                colors={['rgba(236, 72, 153, 0.18)', 'rgba(236, 72, 153, 0.08)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: scale(16), padding: scale(16), alignItems: 'center', gap: scale(8), borderWidth: 1, borderColor: 'rgba(236, 72, 153, 0.2)' }}
+              >
+                <Ionicons name="stats-chart" size={scale(28)} color="#EC4899" />
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(12), color: '#EC4899' }}>Analytics</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
