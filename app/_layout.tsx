@@ -186,6 +186,7 @@ function AuthenticatedLayout() {
         <Stack.Screen name="post-signup-onboarding" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="welcome-back" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="add-month" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
+        <Stack.Screen name="add-trade" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
         <Stack.Screen name="month-details/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
