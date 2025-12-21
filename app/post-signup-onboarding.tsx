@@ -4,16 +4,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  Keyboard,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ViewToken,
+    Animated,
+    Dimensions,
+    FlatList,
+    Keyboard,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    ViewToken
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../src/config/fonts';
@@ -29,6 +28,7 @@ interface OnboardingSlide {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
   gradientColors: [string, string];
+  badge?: string;
   title: string;
   subtitle: string;
   description: string;
@@ -40,15 +40,6 @@ interface OnboardingSlide {
 const SLIDES: OnboardingSlide[] = [
   {
     id: '0',
-    icon: 'sparkles',
-    gradientColors: ['#7C3AED', '#4C1D95'], // Violet gradient
-    title: 'Welcome to TradeX',
-    subtitle: 'Your Trading Journey Starts Here',
-    description: 'Track, analyze, and grow with confidence.',
-    isWelcome: true,
-  },
-  {
-    id: '1',
     icon: 'person',
     gradientColors: ['#059669', '#047857'], // Green gradient
     title: "What's your name?",
@@ -57,7 +48,7 @@ const SLIDES: OnboardingSlide[] = [
     isNameInput: true,
   },
   {
-    id: '2',
+    id: '1',
     icon: 'bar-chart',
     gradientColors: ['#2563EB', '#1D4ED8'], // Blue gradient
     title: 'Track Performance',
@@ -65,15 +56,7 @@ const SLIDES: OnboardingSlide[] = [
     description: 'Log your monthly P&L and watch your progress through intuitive charts.',
   },
   {
-    id: '3',
-    icon: 'bulb',
-    gradientColors: ['#DC2626', '#991B1B'], // Red gradient
-    title: 'AI-Powered Insights',
-    subtitle: 'Smarter Decisions',
-    description: 'Get personalized analysis tailored to your trading style.',
-  },
-  {
-    id: '4',
+    id: '2',
     icon: 'trophy',
     gradientColors: ['#D97706', '#B45309'], // Amber gradient
     title: 'Celebrate Wins',
@@ -81,6 +64,7 @@ const SLIDES: OnboardingSlide[] = [
     description: 'Track streaks and stay motivated on your path to profitability.',
   },
 ];
+
 export default function PostSignupOnboarding() {
   const router = useRouter();
   const { refreshUser } = useAuth();
@@ -113,7 +97,7 @@ export default function PostSignupOnboarding() {
 
   const handleFinish = async () => {
     await AsyncStorage.setItem(POST_SIGNUP_ONBOARDING_KEY, 'true');
-    router.replace('/(tabs)');
+    router.replace('/welcome-back');
   };
 
   const handleSaveName = async () => {
@@ -256,55 +240,30 @@ export default function PostSignupOnboarding() {
       );
     }
 
-    // Regular slide
+    // Regular slide (original design)
     return (
       <View style={{ width: SCREEN_WIDTH, flex: 1, paddingHorizontal: scale(32) }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           {/* 3D Icon Card */}
           <Animated.View style={{ marginBottom: scale(40), transform: [{ scale: iconScale }] }}>
-            {item.isWelcome ? (
-              // App Icon for Welcome
-              <Image
-                source={require('../assets/images/icon.png')}
-                style={{
-                  width: scale(100),
-                  height: scale(100),
-                  borderRadius: scale(28),
-                }}
-              />
-            ) : (
-              <View style={{
-                width: scale(100),
-                height: scale(100),
-                borderRadius: scale(28),
-                backgroundColor: 'rgba(255,255,255,0.25)',
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 12 },
-                shadowOpacity: 0.3,
-                shadowRadius: 16,
-                elevation: 12,
-              }}>
-                <Ionicons name={item.icon} size={scale(48)} color="#FFFFFF" />
-              </View>
-            )}
+            <View style={{
+              width: scale(100),
+              height: scale(100),
+              borderRadius: scale(28),
+              backgroundColor: 'rgba(255,255,255,0.25)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 12 },
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+              elevation: 12,
+            }}>
+              <Ionicons name={item.icon} size={scale(48)} color="#FFFFFF" />
+            </View>
           </Animated.View>
 
           <Animated.View style={{ opacity: contentOpacity, transform: [{ translateY }], alignItems: 'center' }}>
-            {item.isWelcome && (
-              <Text style={{
-                fontFamily: fonts.medium,
-                fontSize: fontScale(13),
-                color: 'rgba(255,255,255,0.8)',
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-                marginBottom: scale(8),
-              }}>
-                ✦ New Account ✦
-              </Text>
-            )}
-            
             <Text style={{
               fontFamily: fonts.bold,
               fontSize: fontScale(32),

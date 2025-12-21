@@ -112,12 +112,15 @@ export function MonthCard({ month, onPress, showFullDetails = false, tradeCount 
           {/* P&L Highlight */}
           <View style={styles.pnlCard}>
             <View style={styles.pnlRow}>
-              <View>
+              <View style={{ flex: 1, paddingRight: scale(8) }}>
                 <Text style={[styles.pnlLabel, { color: colors.textMuted, fontFamily: fonts.medium }]}>Net P&L</Text>
                 <PrivacyAwareText 
                   value={month.netProfitLoss}
                   format={(val) => formatCurrency(val, true)}
                   style={[styles.pnlValueLarge, { color: isProfit ? colors.profit : colors.loss, fontFamily: fonts.extraBold }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
                 />
               </View>
               <View style={{ alignItems: 'flex-end' }}>
@@ -128,7 +131,7 @@ export function MonthCard({ month, onPress, showFullDetails = false, tradeCount 
                 ]}>
                   <Ionicons 
                     name={isProfit ? 'trending-up' : 'trending-down'} 
-                    size={scale(16)} 
+                    size={scale(14)} 
                     color={isProfit ? colors.profit : colors.loss} 
                   />
                   <PrivacyAwareText 
@@ -298,12 +301,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: scale(6),
-    paddingHorizontal: scale(12),
-    paddingVertical: scale(8),
+    paddingHorizontal: scale(10),
+    paddingVertical: scale(6),
     borderRadius: scale(12),
   },
   returnText: {
-    fontSize: fontScale(16),
+    fontSize: fontScale(14),
   },
   summary: {
     flexDirection: 'row',

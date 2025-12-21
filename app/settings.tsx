@@ -713,16 +713,7 @@ export default function SettingsScreen() {
                   </View>
                 </View>
                 
-                {/* Test Notification Button */}
-                <View style={{ paddingHorizontal: scale(20), marginBottom: scale(16) }}>
-                  <TouchableOpacity
-                    onPress={handleTestNotification}
-                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: themeColors.border, borderRadius: scale(14), padding: scale(16), gap: scale(8) }}
-                  >
-                    <Ionicons name="notifications-outline" size={scale(20)} color={themeColors.text} />
-                    <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: themeColors.text }}>Send Test Notification</Text>
-                  </TouchableOpacity>
-                </View>
+
                 
                 {/* Save Button */}
                 <View style={{ paddingHorizontal: scale(20), marginBottom: scale(12) }}>

@@ -316,18 +316,37 @@ export default function TradesScreen() {
       <View style={{
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         paddingHorizontal: scale(20),
-        paddingTop: scale(8),
-        paddingBottom: scale(16),
+        paddingTop: scale(16),
+        paddingBottom: scale(20),
       }}>
-        <Text style={{
-          fontFamily: fonts.bold,
-          fontSize: fontScale(32),
-          color: themeColors.text,
-        }}>
-          Trades
-        </Text>
+        <View>
+          <Text style={{
+            fontFamily: fonts.bold,
+            fontSize: fontScale(32),
+            color: themeColors.text,
+          }}>
+            Trades
+          </Text>
+          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: themeColors.textMuted, marginTop: scale(4) }}>
+            Track your individual trades
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/add-trade')}
+          style={{
+            width: scale(40),
+            height: scale(40),
+            borderRadius: scale(12),
+            backgroundColor: isDark ? 'rgba(251, 146, 60, 0.15)' : 'rgba(251, 146, 60, 0.1)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: scale(4),
+          }}
+        >
+          <Ionicons name="add" size={scale(24)} color="#FB923C" />
+        </TouchableOpacity>
       </View>
       
       {isLoadingTrades ? (

@@ -119,18 +119,54 @@ export default function AnalyticsScreen() {
     ? months.reduce((worst, m) => m.netProfitLoss < worst.netProfitLoss ? m : worst)
     : null;
   
-  // Prepare chart data - last 6 months, sorted by date
-  const sortedMonths = [...months]
-    .sort((a, b) => a.month.localeCompare(b.month))
-    .slice(-6);
+  const [timeRange, setTimeRange] = useState<'3M' | '6M' | '1Y' | 'All'>('6M');
+  const [viewMode, setViewMode] = useState<'months' | 'trades'>('months');
   
-  const chartLabels = sortedMonths.map(m => {
-    const [, month] = m.month.split('-');
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return monthNames[parseInt(month) - 1];
-  });
-  
-  const chartData = sortedMonths.map(m => m.netProfitLoss);
+  // Prepare chart data based on time range
+  const getFilteredData = () => {
+    const now = new Date();
+    const cutoffDate = new Date();
+    
+    if (timeRange === '3M') cutoffDate.setMonth(now.getMonth() - 3);
+    else if (timeRange === '6M') cutoffDate.setMonth(now.getMonth() - 6);
+    else if (timeRange === '1Y') cutoffDate.setFullYear(now.getFullYear() - 1);
+    else cutoffDate.setFullYear(2000); // All time
+
+    if (viewMode === 'months') {
+      const filteredMonths = months
+        .filter(m => new Date(m.month + '-01') >= cutoffDate)
+        .sort((a, b) => a.month.localeCompare(b.month));
+
+      const labels = filteredMonths.map(m => {
+        const [, month] = m.month.split('-');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return monthNames[parseInt(month) - 1];
+      });
+
+      const data = filteredMonths.map(m => m.netProfitLoss);
+      
+      return { labels, data, filteredItems: filteredMonths };
+    } else {
+      const filteredTrades = trades
+        .filter(t => new Date(t.exitDate) >= cutoffDate)
+        .sort((a, b) => new Date(a.exitDate).getTime() - new Date(b.exitDate).getTime());
+
+      // For trades, we might have too many points, so we can sample them if needed
+      // but purely cumulative P&L is best shown with all points. 
+      // We will hide X-axis labels if too many points.
+      
+      const labels = filteredTrades.map(t => {
+        const d = new Date(t.exitDate);
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+      });
+      
+      const data = filteredTrades.map(t => t.pnl);
+      
+      return { labels, data, filteredItems: filteredTrades };
+    }
+  };
+
+  const { labels: chartLabels, data: chartData, filteredItems } = getFilteredData();
   
   // Calculate cumulative P&L for the line chart
   const cumulativeData = chartData.reduce<number[]>((acc, val) => {
@@ -139,7 +175,7 @@ export default function AnalyticsScreen() {
     return acc;
   }, []);
   
-  const hasChartData = sortedMonths.length >= 2;
+  const hasChartData = chartData.length > 0;
   
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }}>
@@ -393,84 +429,154 @@ export default function AnalyticsScreen() {
             {months.length > 0 && (
               <>
                 {/* P&L Chart */}
-                {hasChartData && (
+                {/* P&L Chart */}
+                {(months.length > 0 || trades.length > 0) && (
                   <View style={{ paddingHorizontal: scale(20), marginBottom: scale(20) }}>
                     <View style={{ backgroundColor: themeColors.card, borderRadius: scale(20), padding: scale(20), borderWidth: 1, borderColor: themeColors.border }}>
+                      
+                      {/* Chart Controls */}
+                      <View style={{ marginBottom: scale(20) }}>
+                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(12) }}>
+                           <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(17), color: themeColors.text }}>Performance</Text>
+                           <View style={{ flexDirection: 'row', backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', borderRadius: scale(8), padding: 2 }}>
+                             {(['months', 'trades'] as const).map((mode) => (
+                               <TouchableOpacity
+                                 key={mode}
+                                 onPress={() => setViewMode(mode)}
+                                 style={{
+                                   paddingHorizontal: scale(12),
+                                   paddingVertical: scale(6),
+                                   borderRadius: scale(6),
+                                   backgroundColor: viewMode === mode ? themeColors.bg : 'transparent',
+                                 }}
+                               >
+                                 <Text style={{ 
+                                   fontFamily: fonts.semiBold, 
+                                   fontSize: fontScale(11), 
+                                   color: viewMode === mode ? themeColors.text : themeColors.textMuted,
+                                   textTransform: 'capitalize'
+                                 }}>
+                                   {mode}
+                                 </Text>
+                               </TouchableOpacity>
+                             ))}
+                           </View>
+                         </View>
+                         
+                         {/* Time Range Selector */}
+                         <View style={{ flexDirection: 'row', gap: scale(8) }}>
+                           {(['3M', '6M', '1Y', 'All'] as const).map((range) => (
+                             <TouchableOpacity
+                               key={range}
+                               onPress={() => setTimeRange(range)}
+                               style={{
+                                 paddingHorizontal: scale(12),
+                                 paddingVertical: scale(6),
+                                 borderRadius: scale(14),
+                                 backgroundColor: timeRange === range ? isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                 borderWidth: 1,
+                                 borderColor: timeRange === range ? '#6366F1' : themeColors.border,
+                               }}
+                             >
+                               <Text style={{ 
+                                 fontFamily: fonts.medium, 
+                                 fontSize: fontScale(11), 
+                                 color: timeRange === range ? '#6366F1' : themeColors.textMuted 
+                               }}>
+                                 {range}
+                               </Text>
+                             </TouchableOpacity>
+                           ))}
+                         </View>
+                      </View>
+
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(16) }}>
                         <View>
-                          <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(17), color: themeColors.text }}>Cumulative P&L</Text>
-                          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: themeColors.textMuted, marginTop: scale(2) }}>Last {sortedMonths.length} months</Text>
+                          <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted }}>
+                             Cumulative P&L ({viewMode === 'months' ? 'Monthly' : 'Per Trade'})
+                          </Text>
                         </View>
-                        <View style={{ backgroundColor: cumulativeData[cumulativeData.length - 1] >= 0 ? 'rgba(16, 185, 95, 0.1)' : 'rgba(239, 68, 68, 0.1)', paddingHorizontal: scale(10), paddingVertical: scale(6), borderRadius: scale(8) }}>
+                        <View style={{ backgroundColor: (cumulativeData[cumulativeData.length - 1] || 0) >= 0 ? 'rgba(16, 185, 95, 0.1)' : 'rgba(239, 68, 68, 0.1)', paddingHorizontal: scale(10), paddingVertical: scale(6), borderRadius: scale(8) }}>
                           <PrivacyAwareText 
                             value={cumulativeData[cumulativeData.length - 1] || 0} 
                             format={formatCurrency} 
-                            style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: cumulativeData[cumulativeData.length - 1] >= 0 ? colors.profit : colors.loss }} 
+                            style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: (cumulativeData[cumulativeData.length - 1] || 0) >= 0 ? colors.profit : colors.loss }} 
                             maskedValue="••••"
                           />
                         </View>
                       </View>
-                      <LineChart
-                        data={{
-                          labels: chartLabels,
-                          datasets: [{ 
-                            data: cumulativeData.length > 0 ? cumulativeData : [0],
+                      
+                      {cumulativeData.length > 0 ? (
+                        <LineChart
+                          data={{
+                            labels: chartLabels,
+                            datasets: [{ 
+                              data: cumulativeData,
+                              color: () => colors.primary,
+                              strokeWidth: 2,
+                            }],
+                          }}
+                          width={screenWidth - scale(80)}
+                          height={scale(200)}
+                          yAxisLabel={isPrivacyMode ? "" : "$"}
+                          yAxisSuffix={isPrivacyMode ? "" : ""}
+                          formatYLabel={(val) => isPrivacyMode ? "•••" : parseInt(val).toLocaleString(undefined, { notation: "compact", compactDisplay: "short" })}
+                          withVerticalLabels={chartLabels.length <= 6} // Hide labels if too many points
+                          chartConfig={{
+                            backgroundColor: 'transparent',
+                            backgroundGradientFrom: themeColors.card,
+                            backgroundGradientTo: themeColors.card,
+                            decimalPlaces: 0,
                             color: () => colors.primary,
-                            strokeWidth: 3,
-                          }],
-                        }}
-                        width={screenWidth - scale(80)}
-                        height={scale(180)}
-                        yAxisLabel={isPrivacyMode ? "" : "$"}
-                        yAxisSuffix={isPrivacyMode ? "" : ""}
-                        formatYLabel={(val) => isPrivacyMode ? "•••" : parseInt(val).toLocaleString()}
-                        chartConfig={{
-                          backgroundColor: 'transparent',
-                          backgroundGradientFrom: themeColors.card,
-                          backgroundGradientTo: themeColors.card,
-                          decimalPlaces: 0,
-                          color: () => colors.primary,
-                          labelColor: () => themeColors.textMuted,
-                          propsForDots: {
-                            r: '6',
-                            strokeWidth: '2',
-                            stroke: colors.primary,
-                            fill: themeColors.card,
-                          },
-                          propsForBackgroundLines: {
-                            strokeDasharray: '',
-                            stroke: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                          },
-                        }}
-                        bezier
-                        style={{ borderRadius: scale(12), marginLeft: -scale(16) }}
-                        withInnerLines={true}
-                        withOuterLines={false}
-                        onDataPointClick={({ value, x, y, index }) => {
-                          if (isPrivacyMode) return;
-                          setTooltip({
-                            x, y, value, index
-                          });
-                          setTimeout(() => setTooltip(null), 3000);
-                        }}
-                        decorator={() => {
-                          return tooltip ? (
-                            <View style={{
-                              position: 'absolute',
-                              left: tooltip.x - 40,
-                              top: tooltip.y - 40,
-                              backgroundColor: themeColors.text,
-                              padding: 8,
-                              borderRadius: 8,
-                              zIndex: 100
-                            }}>
-                              <Text style={{ color: themeColors.bg, fontSize: 12, fontWeight: 'bold' }}>
-                                {formatCurrency(tooltip.value)}
-                              </Text>
-                            </View>
-                          ) : null;
-                        }}
-                      />
+                            labelColor: () => themeColors.textMuted,
+                            propsForDots: {
+                              r: '0', // Hide dots for cleaner look on dense data
+                              strokeWidth: '0',
+                              stroke: colors.primary,
+                            },
+                            propsForBackgroundLines: {
+                              strokeDasharray: '',
+                              stroke: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                            },
+                            fillShadowGradientFrom: colors.primary,
+                            fillShadowGradientTo: themeColors.card,
+                            fillShadowGradientFromOpacity: 0.2,
+                            fillShadowGradientToOpacity: 0.05,
+                          }}
+                          bezier
+                          style={{ borderRadius: scale(12), marginLeft: -scale(10) }}
+                          withInnerLines={true}
+                          withOuterLines={false}
+                          onDataPointClick={({ value, x, y, index }) => {
+                            if (isPrivacyMode) return;
+                            setTooltip({
+                              x, y, value, index
+                            });
+                            setTimeout(() => setTooltip(null), 3000);
+                          }}
+                          decorator={() => {
+                            return tooltip ? (
+                              <View style={{
+                                position: 'absolute',
+                                left: Math.min(Math.max(tooltip.x - 40, 0), screenWidth - 140),
+                                top: Math.max(tooltip.y - 40, 0),
+                                backgroundColor: themeColors.text,
+                                padding: 8,
+                                borderRadius: 8,
+                                zIndex: 100
+                              }}>
+                                <Text style={{ color: themeColors.bg, fontSize: 12, fontWeight: 'bold' }}>
+                                  {formatCurrency(tooltip.value)}
+                                </Text>
+                              </View>
+                            ) : null;
+                          }}
+                        />
+                      ) : (
+                        <View style={{ height: scale(180), justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ color: themeColors.textMuted }}>No data for selected period</Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                 )}
