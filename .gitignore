@@ -42,3 +42,14 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Firebase config (SENSITIVE - do not commit!)
+GoogleService-Info.plist
+google-services.json
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+coverage/
