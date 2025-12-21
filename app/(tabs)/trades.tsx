@@ -5,14 +5,16 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     RefreshControl,
     ScrollView,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SwipeableRow } from '../../src/components/SwipeableRow';
 import { fonts } from '../../src/config/fonts';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useTrading } from '../../src/context/TradingContext';
@@ -24,7 +26,7 @@ type FilterType = 'all' | 'wins' | 'losses';
 export default function TradesScreen() {
   const { isDark } = useTheme();
   const router = useRouter();
-  const { trades, tradeStats, isLoadingTrades, loadMonths } = useTrading();
+  const { trades, tradeStats, isLoadingTrades, loadMonths, deleteTrade } = useTrading();
   const [filter, setFilter] = useState<FilterType>('all');
   const [refreshing, setRefreshing] = useState(false);
   
@@ -97,22 +99,48 @@ export default function TradesScreen() {
   };
   
   // Render trade card
+  const handleDeleteTrade = (trade: Trade) => {
+    Alert.alert(
+      'Delete Trade',
+      `Are you sure you want to delete the ${trade.symbol} trade?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteTrade(trade.id);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete trade');
+            }
+          }
+        },
+      ]
+    );
+  };
+
   const renderTradeCard = ({ item }: { item: Trade }) => {
     const isWin = item.pnl > 0;
     const isLoss = item.pnl < 0;
     
     return (
-      <TouchableOpacity
-        onPress={() => router.push(`/trade-detail?id=${item.id}`)}
-        style={{
-          backgroundColor: themeColors.card,
-          borderRadius: scale(16),
-          padding: scale(16),
-          marginBottom: scale(12),
-          borderWidth: 1,
-          borderColor: themeColors.cardBorder,
-        }}
+      <SwipeableRow
+        onDelete={() => handleDeleteTrade(item)}
+        onEdit={() => router.push(`/trade-detail?id=${item.id}`)}
       >
+        <TouchableOpacity
+          onPress={() => router.push(`/trade-detail?id=${item.id}`)}
+          style={{
+            backgroundColor: themeColors.card,
+            borderRadius: scale(16),
+            padding: scale(16),
+            marginBottom: scale(12),
+            borderWidth: 1,
+            borderColor: themeColors.cardBorder,
+          }}
+        >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           {/* Left: Symbol & Type */}
           <View style={{ flex: 1 }}>
@@ -200,7 +228,8 @@ export default function TradesScreen() {
             ))}
           </View>
         )}
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </SwipeableRow>
     );
   };
   

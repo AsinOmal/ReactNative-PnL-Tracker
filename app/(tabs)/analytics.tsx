@@ -717,11 +717,11 @@ export default function AnalyticsScreen() {
               if (sortedSymbols.length === 0) return null;
               
               return (
-                <View style={{ marginTop: scale(24) }}>
+                <View style={{ paddingHorizontal: scale(20), marginTop: scale(24) }}>
                   <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(13), color: themeColors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(12) }}>
                     Symbol Performance
                   </Text>
-                  <View style={{ backgroundColor: themeColors.card, borderRadius: scale(16), padding: scale(16), borderWidth: 1, borderColor: themeColors.border }}>
+                  <View style={{ backgroundColor: isDark ? '#18181B' : '#FFFFFF', borderRadius: scale(16), padding: scale(16), borderWidth: 1, borderColor: isDark ? '#27272A' : '#E4E4E7' }}>
                     {sortedSymbols.slice(0, 5).map(([symbol, data], idx) => (
                       <View key={symbol} style={{ 
                         flexDirection: 'row', 
@@ -729,7 +729,7 @@ export default function AnalyticsScreen() {
                         justifyContent: 'space-between',
                         paddingVertical: scale(12),
                         borderBottomWidth: idx < sortedSymbols.slice(0, 5).length - 1 ? 1 : 0,
-                        borderBottomColor: themeColors.border,
+                        borderBottomColor: isDark ? '#27272A' : '#E4E4E7',
                       }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(12) }}>
                           <View style={{
@@ -792,7 +792,12 @@ export default function AnalyticsScreen() {
                                     style={{ fontFamily: fonts.bold, fontSize: 24, color: themeColors.text, textAlign: 'center' }}
                                     keyboardType="numeric"
                                     value={tempGoal}
-                                    onChangeText={setTempGoal}
+                                    onChangeText={(text) => {
+                                      // Remove non-digits, then format with commas
+                                      const digits = text.replace(/[^0-9]/g, '');
+                                      const formatted = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                                      setTempGoal(formatted);
+                                    }}
                                     autoFocus
                                 />
                             </View>
