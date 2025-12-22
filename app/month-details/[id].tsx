@@ -32,6 +32,14 @@ export default function MonthDetailsScreen() {
   const month = getMonthById(id!);
   const monthTrades = month ? getTradesByMonth(month.month) : [];
   
+  // Use trade P&L when trades exist
+  const hasTrades = monthTrades.length > 0;
+  const tradePnL = hasTrades ? monthTrades.reduce((sum, t) => sum + t.pnl, 0) : 0;
+  const effectivePnL = hasTrades ? tradePnL : (month?.netProfitLoss ?? 0);
+  const effectiveReturn = hasTrades && month && month.startingCapital > 0
+    ? (tradePnL / month.startingCapital) * 100
+    : (month?.returnPercentage ?? 0);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [startingCapital, setStartingCapital] = useState('');
   const [endingCapital, setEndingCapital] = useState('');
@@ -182,7 +190,7 @@ export default function MonthDetailsScreen() {
     }
   };
   
-  const profitColor = month.netProfitLoss >= 0 ? colors.profit : colors.loss;
+  const profitColor = effectivePnL >= 0 ? colors.profit : colors.loss;
   
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -347,30 +355,37 @@ export default function MonthDetailsScreen() {
             <>
               {/* Hero P&L Card */}
               <LinearGradient
-                colors={month.netProfitLoss >= 0 ? ['#10B95F', '#059669'] : ['#EF4444', '#DC2626']}
+                colors={effectivePnL >= 0 ? ['#10B95F', '#059669'] : ['#EF4444', '#DC2626']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
                   borderRadius: 24,
                   padding: 24,
                   marginBottom: 24,
-                  shadowColor: month.netProfitLoss >= 0 ? '#10B95F' : '#EF4444',
+                  shadowColor: effectivePnL >= 0 ? '#10B95F' : '#EF4444',
                   shadowOffset: { width: 0, height: 8 },
                   shadowOpacity: 0.3,
                   shadowRadius: 16,
                   elevation: 8,
                 }}
               >
-                <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>
-                  Net Profit/Loss
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>
+                    Net Profit/Loss
+                  </Text>
+                  {hasTrades && (
+                    <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: 11, color: '#FFFFFF' }}>FROM TRADES</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={{ fontFamily: fonts.bold, fontSize: 36, color: '#FFFFFF', marginBottom: 8 }}>
-                  {formatCurrency(month.netProfitLoss, true)}
+                  {formatCurrency(effectivePnL, true)}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
                     <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: '#FFFFFF' }}>
-                      {formatPercentage(month.returnPercentage, true)}
+                      {formatPercentage(effectiveReturn, true)}
                     </Text>
                   </View>
                   <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>

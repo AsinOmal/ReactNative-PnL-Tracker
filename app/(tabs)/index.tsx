@@ -803,6 +803,9 @@ export default function HomeScreen() {
               showFullDetails 
               onPress={() => router.push(`/month-details/${currentMonth.id}`)}
               tradeCount={getTradesByMonth(currentMonth.month).length}
+              tradePnL={getTradesByMonth(currentMonth.month).length > 0 
+                ? getTradesByMonth(currentMonth.month).reduce((sum, t) => sum + t.pnl, 0) 
+                : undefined}
             />
           </View>
         )}
@@ -818,15 +821,21 @@ export default function HomeScreen() {
                 <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(14), color: themeColors.primary }}>See All</Text>
               </TouchableOpacity>
             </View>
-            {recentMonths.map(month => (
-              <View key={month.id} style={{ marginBottom: scale(12) }}>
-                <MonthCard
-                  month={month}
-                  onPress={() => router.push(`/month-details/${month.id}`)}
-                  tradeCount={getTradesByMonth(month.month).length}
-                />
-              </View>
-            ))}
+            {recentMonths.map(month => {
+              const monthTrades = getTradesByMonth(month.month);
+              return (
+                <View key={month.id} style={{ marginBottom: scale(12) }}>
+                  <MonthCard
+                    month={month}
+                    onPress={() => router.push(`/month-details/${month.id}`)}
+                    tradeCount={monthTrades.length}
+                    tradePnL={monthTrades.length > 0 
+                      ? monthTrades.reduce((sum, t) => sum + t.pnl, 0) 
+                      : undefined}
+                  />
+                </View>
+              );
+            })}
           </View>
         )}
       </ScrollView>

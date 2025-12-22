@@ -15,11 +15,21 @@ interface MonthCardProps {
   onPress?: () => void;
   showFullDetails?: boolean;
   tradeCount?: number;
+  tradePnL?: number; // P&L calculated from trades - overrides manual entry when present
 }
 
-export function MonthCard({ month, onPress, showFullDetails = false, tradeCount = 0 }: MonthCardProps) {
+export function MonthCard({ month, onPress, showFullDetails = false, tradeCount = 0, tradePnL }: MonthCardProps) {
   const { isDark } = useTheme();
-  const isProfit = month.netProfitLoss >= 0;
+  
+  // Use trade P&L when trades exist (tradeCount > 0 and tradePnL is provided)
+  const hasTrades = tradeCount > 0 && tradePnL !== undefined;
+  const effectivePnL = hasTrades ? tradePnL : month.netProfitLoss;
+  const isProfit = effectivePnL >= 0;
+  
+  // Calculate effective return percentage
+  const effectiveReturn = hasTrades && month.startingCapital > 0
+    ? (tradePnL / month.startingCapital) * 100
+    : month.returnPercentage;
   
   const colors = {
     text: isDark ? '#F4F4F5' : '#18181B',
@@ -115,7 +125,7 @@ export function MonthCard({ month, onPress, showFullDetails = false, tradeCount 
               <View style={{ flex: 1, paddingRight: scale(8) }}>
                 <Text style={[styles.pnlLabel, { color: colors.textMuted, fontFamily: fonts.medium }]}>Net P&L</Text>
                 <PrivacyAwareText 
-                  value={month.netProfitLoss}
+                  value={effectivePnL}
                   format={(val) => formatCurrency(val, true)}
                   style={[styles.pnlValueLarge, { color: isProfit ? colors.profit : colors.loss, fontFamily: fonts.extraBold }]}
                   numberOfLines={1}
@@ -135,7 +145,7 @@ export function MonthCard({ month, onPress, showFullDetails = false, tradeCount 
                     color={isProfit ? colors.profit : colors.loss} 
                   />
                   <PrivacyAwareText 
-                    value={month.returnPercentage}
+                    value={effectiveReturn}
                     format={(val) => formatPercentage(val, true)}
                     style={[styles.returnText, { color: isProfit ? colors.profit : colors.loss, fontFamily: fonts.bold }]}
                     maskedValue="•••"
@@ -149,7 +159,7 @@ export function MonthCard({ month, onPress, showFullDetails = false, tradeCount 
         // Summary View (Recent Performance cards)
         <View style={styles.summary}>
           <PrivacyAwareText 
-            value={month.netProfitLoss}
+            value={effectivePnL}
             format={(val) => formatCurrency(val, true)}
             style={[styles.pnl, { color: isProfit ? colors.profit : colors.loss, fontFamily: fonts.extraBold }]}
           />
@@ -163,7 +173,7 @@ export function MonthCard({ month, onPress, showFullDetails = false, tradeCount 
               color={isProfit ? colors.profit : colors.loss} 
             />
             <PrivacyAwareText 
-              value={month.returnPercentage}
+              value={effectiveReturn}
               format={(val) => formatPercentage(val, true)}
               style={[styles.returnPct, { color: isProfit ? colors.profit : colors.loss, fontFamily: fonts.semiBold }]}
               maskedValue="•••"
