@@ -81,27 +81,37 @@ export default function WelcomeBack() {
     checkLockSettings();
   }, []);
 
+  // Run entry animations when entering unlocked state
   useEffect(() => {
-    // Entry animations
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    if (lockState === 'unlocked') {
+      // Reset animations first
+      fadeAnim.setValue(0);
+      scaleAnim.setValue(0.8);
+      slideAnim.setValue(40);
+      
+      // Entry animations
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [lockState]);
 
+  useEffect(() => {
     // Glow pulse
     Animated.loop(
       Animated.sequence([
