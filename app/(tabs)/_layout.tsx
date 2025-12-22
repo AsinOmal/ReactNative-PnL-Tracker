@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/context/ThemeContext';
 import { fontScale, scale } from '../../src/utils/scaling';
@@ -17,7 +17,9 @@ export default function TabLayout() {
     inactive: isDark ? '#71717A' : '#A1A1AA',
   };
   
-  const bottomMargin = Math.max(insets.bottom, scale(20));
+  // Increase minimum for Android to accommodate navigation bar
+  const minBottom = Platform.OS === 'android' ? scale(28) : scale(20);
+  const bottomMargin = Math.max(insets.bottom, minBottom);
   
   return (
     <View style={{ flex: 1 }}>

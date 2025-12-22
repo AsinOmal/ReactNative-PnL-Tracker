@@ -420,13 +420,13 @@ export default function HomeScreen() {
           </View>
           
           {/* Greeting Section - Animated */}
-          <View key={`greeting-${isDark}`} style={{ height: fontScale(50), justifyContent: 'flex-start' }}>
+          <View key={`greeting-${isDark}`} style={{ height: fontScale(60), justifyContent: 'flex-start' }}>
             <Animated.View style={{ opacity: greetingFadeAnim }}>
               <Text 
-                style={{ fontFamily: fonts.bold, fontSize: fontScale(24), color: themeColors.text, lineHeight: fontScale(32) }}
+                style={{ fontFamily: fonts.bold, fontSize: 26, color: themeColors.text, lineHeight: 34 }}
                 numberOfLines={2}
                 adjustsFontSizeToFit
-                minimumFontScale={0.8}
+                minimumFontScale={0.9}
               >
                 {typedGreeting.length <= greetingPrefix.length ? (
                   typedGreeting

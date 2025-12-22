@@ -71,12 +71,12 @@ function AuthenticatedLayout() {
     
     // User is authenticated with valid credentials
     if (isAuthValid) {
-      // 1. Check Email Verification - TEMPORARILY DISABLED
-      // if (!user.emailVerified) {
-      //   console.log('User unverified, redirecting to verify-email');
-      //   router.replace('/auth/verify-email');
-      //   return;
-      // }
+      // 1. Check Email Verification
+      if (!user.emailVerified) {
+        console.log('User unverified, redirecting to verify-email');
+        router.replace('/auth/verify-email');
+        return;
+      }
 
       // 2. Check Post-Signup Onboarding
       // If not complete, we must show it. 

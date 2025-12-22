@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     Modal,
@@ -38,6 +39,10 @@ import {
     saveReminderSettings,
     sendTestNotification,
 } from '../src/services/notificationService';
+import {
+    hasPIN,
+    isPinLockEnabled
+} from '../src/services/pinService';
 import { fontScale, scale } from '../src/utils/scaling';
 
 export default function SettingsScreen() {
@@ -59,6 +64,10 @@ export default function SettingsScreen() {
   
   const [biometric, setBiometric] = useState<BiometricCapabilities | null>(null);
   const [biometricOn, setBiometricOn] = useState(false);
+  const [pinLockOn, setPinLockOn] = useState(false);
+  const [hasSetPin, setHasSetPin] = useState(false);
+  const [showBiometricInfoModal, setShowBiometricInfoModal] = useState(false);
+  const [showPrivacyInfoModal, setShowPrivacyInfoModal] = useState(false);
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -78,28 +87,50 @@ export default function SettingsScreen() {
     setLocalGoal(yearlyGoal > 0 ? yearlyGoal.toLocaleString() : '');
   }, [yearlyGoal]);
   
-  useEffect(() => {
-    const checkSettings = async () => {
-      // Check biometric
-      const caps = await getBiometricCapabilities();
-      setBiometric(caps);
-      const biometricEnabled = await isBiometricEnabled();
-      setBiometricOn(biometricEnabled);
-      
-      // Check notifications
-      const notifEnabled = await areNotificationsEnabled();
-      setNotificationsOn(notifEnabled);
-      
-      // Load reminder settings
-      const settings = await loadReminderSettings();
-      setReminderSettings(settings);
-    };
-    checkSettings();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const checkSettings = async () => {
+        // Check biometric
+        const caps = await getBiometricCapabilities();
+        setBiometric(caps);
+        const biometricEnabled = await isBiometricEnabled();
+        setBiometricOn(biometricEnabled);
+        
+        // Check PIN
+        const pinSet = await hasPIN();
+        setHasSetPin(pinSet);
+        const pinEnabled = await isPinLockEnabled();
+        setPinLockOn(pinEnabled);
+        
+        // Check notifications
+        const notifEnabled = await areNotificationsEnabled();
+        setNotificationsOn(notifEnabled);
+        
+        // Load reminder settings
+        const settings = await loadReminderSettings();
+        setReminderSettings(settings);
+      };
+      checkSettings();
+    }, [])
+  );
   
   const handleBiometricToggle = async (value: boolean) => {
     await setBiometricEnabled(value);
     setBiometricOn(value);
+  };
+  
+  const handlePinToggle = async (value: boolean) => {
+    if (value) {
+      // Navigate to set-pin screen for new PIN
+      router.push('/set-pin?mode=setup');
+    } else {
+      // Navigate to verify PIN before disabling
+      router.push('/set-pin?mode=disable');
+    }
+  };
+  
+  const handlePinChange = () => {
+    router.push('/set-pin?mode=change');
   };
   
   const openReminderModal = async () => {
@@ -221,6 +252,7 @@ export default function SettingsScreen() {
     label, 
     value, 
     onPress, 
+    infoPress,
     type = 'link', 
     showBorder = true 
   }: { 
@@ -228,7 +260,8 @@ export default function SettingsScreen() {
     iconColor: string; 
     label: string; 
     value?: string | boolean; 
-    onPress?: () => void; 
+    onPress?: () => void;
+    infoPress?: () => void; 
     type?: 'link' | 'toggle' | 'action'; 
     showBorder?: boolean 
   }) => (
@@ -250,6 +283,11 @@ export default function SettingsScreen() {
           <Ionicons name={icon} size={scale(22)} color={iconColor} style={{ opacity: 0.85 }} />
         </View>
         <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(16), color: type === 'action' && iconColor === '#EF4444' ? '#EF4444' : themeColors.text }}>{label}</Text>
+        {infoPress && (
+          <TouchableOpacity onPress={infoPress} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="information-circle-outline" size={scale(18)} color={themeColors.textMuted} />
+          </TouchableOpacity>
+        )}
       </View>
       
       {type === 'toggle' && (
@@ -466,7 +504,8 @@ export default function SettingsScreen() {
               label="Privacy Mode" 
               type="toggle" 
               value={isPrivacyMode} 
-              onPress={togglePrivacyMode} 
+              onPress={togglePrivacyMode}
+              infoPress={() => setShowPrivacyInfoModal(true)} 
               showBorder={false}
             />
 
@@ -485,14 +524,34 @@ export default function SettingsScreen() {
                 type="toggle" 
                 value={biometricOn} 
                 onPress={() => handleBiometricToggle(!biometricOn)} 
-                showBorder={false}
+                showBorder={true}
               />
             ) : (
               <SettingItem 
-                icon="lock-closed" 
-                iconColor={themeColors.textMuted} 
+                icon="information-circle" 
+                iconColor="#F59E0B" 
                 label="Biometrics Unavailable" 
                 type="link" 
+                onPress={() => setShowBiometricInfoModal(true)}
+                showBorder={true}
+              />
+            )}
+            <SettingItem 
+              icon="keypad" 
+              iconColor="#8B5CF6" 
+              label="PIN Lock" 
+              type="toggle" 
+              value={pinLockOn} 
+              onPress={() => handlePinToggle(!pinLockOn)} 
+              showBorder={pinLockOn}
+            />
+            {pinLockOn && (
+              <SettingItem 
+                icon="create-outline" 
+                iconColor="#8B5CF6" 
+                label="Change PIN" 
+                type="link" 
+                onPress={handlePinChange} 
                 showBorder={false}
               />
             )}
@@ -742,6 +801,100 @@ export default function SettingsScreen() {
                 )}
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Biometric Info Modal */}
+      <Modal
+        visible={showBiometricInfoModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowBiometricInfoModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'center', alignItems: 'center', padding: scale(24) }}>
+          <View style={{ backgroundColor: themeColors.card, borderRadius: scale(20), padding: scale(24), width: '100%', maxWidth: scale(340) }}>
+            <View style={{ alignItems: 'center', marginBottom: scale(16) }}>
+              <View style={{ width: scale(64), height: scale(64), borderRadius: scale(32), backgroundColor: '#F59E0B20', justifyContent: 'center', alignItems: 'center', marginBottom: scale(12) }}>
+                <Ionicons name="finger-print" size={scale(32)} color="#F59E0B" />
+              </View>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, textAlign: 'center' }}>
+                Biometrics Unavailable
+              </Text>
+            </View>
+            <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, textAlign: 'center', marginBottom: scale(16), lineHeight: fontScale(22) }}>
+              This could happen if:
+            </Text>
+            <View style={{ gap: scale(8), marginBottom: scale(20) }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+                <Ionicons name="close-circle" size={scale(18)} color="#EF4444" />
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>No fingerprint or face enrolled</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+                <Ionicons name="close-circle" size={scale(18)} color="#EF4444" />
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Device doesn't support biometrics</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+                <Ionicons name="close-circle" size={scale(18)} color="#EF4444" />
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Permission not granted</Text>
+              </View>
+            </View>
+            <View style={{ backgroundColor: 'rgba(16, 185, 95, 0.1)', borderRadius: scale(12), padding: scale(14), marginBottom: scale(20), flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+              <Ionicons name="bulb-outline" size={scale(20)} color="#10B95F" />
+              <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: '#10B95F', flex: 1 }}>
+                Use PIN Lock as an alternative
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowBiometricInfoModal(false)}
+              style={{ backgroundColor: '#10B95F', borderRadius: scale(12), padding: scale(14), alignItems: 'center' }}
+            >
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: '#FFFFFF' }}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Privacy Mode Info Modal */}
+      <Modal
+        visible={showPrivacyInfoModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowPrivacyInfoModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'center', alignItems: 'center', padding: scale(24) }}>
+          <View style={{ backgroundColor: themeColors.card, borderRadius: scale(20), padding: scale(24), width: '100%', maxWidth: scale(340) }}>
+            <View style={{ alignItems: 'center', marginBottom: scale(16) }}>
+              <View style={{ width: scale(64), height: scale(64), borderRadius: scale(32), backgroundColor: '#8B5CF620', justifyContent: 'center', alignItems: 'center', marginBottom: scale(12) }}>
+                <Ionicons name="eye-off" size={scale(32)} color="#8B5CF6" />
+              </View>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, textAlign: 'center' }}>
+                Privacy Mode
+              </Text>
+            </View>
+            <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, textAlign: 'center', marginBottom: scale(16), lineHeight: fontScale(22) }}>
+              Hide your financial data from prying eyes!
+            </Text>
+            <View style={{ gap: scale(12), marginBottom: scale(20) }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: scale(10) }}>
+                <Ionicons name="checkmark-circle" size={scale(20)} color="#10B95F" />
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>All P&L amounts are hidden and shown as "••••"</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: scale(10) }}>
+                <Ionicons name="checkmark-circle" size={scale(20)} color="#10B95F" />
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Perfect for using the app in public</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: scale(10) }}>
+                <Ionicons name="checkmark-circle" size={scale(20)} color="#10B95F" />
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Tap the toggle to show/hide anytime</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowPrivacyInfoModal(false)}
+              style={{ backgroundColor: '#8B5CF6', borderRadius: scale(12), padding: scale(14), alignItems: 'center' }}
+            >
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: '#FFFFFF' }}>Got it</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
