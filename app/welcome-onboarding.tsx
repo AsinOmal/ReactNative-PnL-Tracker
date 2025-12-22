@@ -3,13 +3,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import {
-    Animated,
-    Image,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { fonts } from '../src/config/fonts';
 import { fontScale, scale } from '../src/utils/scaling';
@@ -233,9 +233,7 @@ export default function WelcomeOnboarding() {
         <View style={styles.logoContainer}>
           <Text style={styles.logoText}>TradeX</Text>
         </View>
-        <TouchableOpacity onPress={handleSkip} style={styles.skipBtn}>
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
+        <View />
       </View>
 
       {/* Main Content */}

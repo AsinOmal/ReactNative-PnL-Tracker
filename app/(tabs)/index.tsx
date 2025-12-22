@@ -252,6 +252,9 @@ export default function HomeScreen() {
     setTypedGreeting('');
     let charIndex = 0;
     
+    // Reset fade value before animating
+    greetingFadeAnim.setValue(0);
+    
     // Start fade in
     Animated.timing(greetingFadeAnim, {
       toValue: 1,

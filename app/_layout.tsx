@@ -86,8 +86,9 @@ function AuthenticatedLayout() {
          return;
       }
 
-      // 3. Go to Home
-      router.replace('/(tabs)');
+      // 3. Show welcome-back splash for returning users
+      console.log('Returning user app open, showing welcome-back splash');
+      router.replace('/welcome-back');
       return;
     }
     

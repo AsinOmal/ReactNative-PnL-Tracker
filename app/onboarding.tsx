@@ -98,14 +98,6 @@ export default function OnboardingScreen() {
     <View style={[styles.container, { backgroundColor: currentSlide.bgColor }]}>
       <StatusBar barStyle={currentSlide.textColor === '#FFFFFF' ? 'light-content' : 'dark-content'} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View /> 
-        <TouchableOpacity onPress={completeOnboarding} style={styles.skipBtn}>
-          <Text style={[styles.skipText, { color: currentSlide.textColor }]}>Skip</Text>
-        </TouchableOpacity>
-      </View>
-
       <Swiper
         ref={swiperRef}
         loop={false}
@@ -181,7 +173,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: scale(24),
-    paddingTop: scale(60),
+    paddingRight: scale(8),
+    paddingTop: scale(50),
     paddingBottom: scale(16),
   },
   skipBtn: {
@@ -189,7 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(16),
   },
   skipText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: fontScale(16),
   },
   slide: {

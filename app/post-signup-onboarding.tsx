@@ -340,6 +340,7 @@ export default function PostSignupOnboarding() {
                 paddingHorizontal: scale(16),
                 borderRadius: scale(20),
                 backgroundColor: 'rgba(255,255,255,0.2)',
+                marginRight: scale(8),
               }}
             >
               <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: '#FFFFFF' }}>
