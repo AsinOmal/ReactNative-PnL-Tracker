@@ -41,7 +41,8 @@ import {
 } from '../src/services/notificationService';
 import {
     hasPIN,
-    isPinLockEnabled
+    isPinLockEnabled,
+    removePIN
 } from '../src/services/pinService';
 import { fontScale, scale } from '../src/utils/scaling';
 
@@ -70,6 +71,10 @@ export default function SettingsScreen() {
   const [showPrivacyInfoModal, setShowPrivacyInfoModal] = useState(false);
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
+  const [showPinVerifyModal, setShowPinVerifyModal] = useState(false);
+  const [pinVerifyAction, setPinVerifyAction] = useState<'disable' | 'change' | null>(null);
+  const [verifyPin, setVerifyPin] = useState('');
+  const [verifyPinError, setVerifyPinError] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [reminderSettings, setReminderSettings] = useState<ReminderSettings>({
     day: 28,
@@ -121,16 +126,45 @@ export default function SettingsScreen() {
   
   const handlePinToggle = async (value: boolean) => {
     if (value) {
-      // Navigate to set-pin screen for new PIN
-      router.push('/set-pin?mode=setup');
+      // Navigate to set-pin screen
+      router.push('/set-pin');
     } else {
-      // Navigate to verify PIN before disabling
-      router.push('/set-pin?mode=disable');
+      // Show verification modal before disabling
+      setPinVerifyAction('disable');
+      setVerifyPin('');
+      setVerifyPinError('');
+      setShowPinVerifyModal(true);
     }
   };
   
-  const handlePinChange = () => {
-    router.push('/set-pin?mode=change');
+  const handleChangePin = () => {
+    // Show verification modal before changing
+    setPinVerifyAction('change');
+    setVerifyPin('');
+    setVerifyPinError('');
+    setShowPinVerifyModal(true);
+  };
+  
+  const handleVerifyPinSubmit = async (pinToVerify: string) => {
+    const { verifyPIN } = await import('../src/services/pinService');
+    const isValid = await verifyPIN(pinToVerify);
+    
+    if (isValid) {
+      setShowPinVerifyModal(false);
+      setVerifyPin('');
+      if (pinVerifyAction === 'disable') {
+        await removePIN();
+        setPinLockOn(false);
+        setHasSetPin(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else if (pinVerifyAction === 'change') {
+        router.push('/set-pin');
+      }
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setVerifyPinError('Incorrect PIN');
+      setVerifyPin('');
+    }
   };
   
   const openReminderModal = async () => {
@@ -543,15 +577,15 @@ export default function SettingsScreen() {
               type="toggle" 
               value={pinLockOn} 
               onPress={() => handlePinToggle(!pinLockOn)} 
-              showBorder={pinLockOn}
+              showBorder={hasSetPin && pinLockOn}
             />
-            {pinLockOn && (
+            {hasSetPin && pinLockOn && (
               <SettingItem 
-                icon="create-outline" 
+                icon="create" 
                 iconColor="#8B5CF6" 
                 label="Change PIN" 
                 type="link" 
-                onPress={handlePinChange} 
+                onPress={handleChangePin} 
                 showBorder={false}
               />
             )}
@@ -805,6 +839,123 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
+      {/* PIN Verification Modal */}
+      <Modal
+        visible={showPinVerifyModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowPinVerifyModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'center', alignItems: 'center', padding: scale(16) }}>
+          <View style={{ 
+            backgroundColor: themeColors.card, 
+            borderRadius: scale(24), 
+            width: '100%', 
+            maxWidth: scale(340),
+            padding: scale(24),
+            borderWidth: 1,
+            borderColor: themeColors.border,
+          }}>
+            {/* Header */}
+            <View style={{ alignItems: 'center', marginBottom: scale(24) }}>
+              <View style={{ 
+                width: scale(56), 
+                height: scale(56), 
+                borderRadius: scale(28), 
+                backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : '#EDE9FE',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: scale(16),
+              }}>
+                <Ionicons name="lock-closed" size={scale(28)} color="#8B5CF6" />
+              </View>
+              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, textAlign: 'center' }}>
+                {pinVerifyAction === 'disable' ? 'Confirm Disable PIN' : 'Verify Current PIN'}
+              </Text>
+              <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, textAlign: 'center', marginTop: scale(8) }}>
+                Enter your current PIN to continue
+              </Text>
+            </View>
+
+            {/* PIN Dots */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: scale(12), marginBottom: scale(24) }}>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: scale(14),
+                    height: scale(14),
+                    borderRadius: scale(7),
+                    backgroundColor: verifyPin.length > i ? '#8B5CF6' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+                  }}
+                />
+              ))}
+            </View>
+
+            {/* Error */}
+            {verifyPinError ? (
+              <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(14), color: '#EF4444', textAlign: 'center', marginBottom: scale(16) }}>
+                {verifyPinError}
+              </Text>
+            ) : null}
+
+            {/* Keypad */}
+            <View style={{ gap: scale(12) }}>
+              {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['', '0', 'del']].map((row, rowIndex) => (
+                <View key={rowIndex} style={{ flexDirection: 'row', justifyContent: 'center', gap: scale(16) }}>
+                  {row.map((key, keyIndex) => {
+                    if (key === '') {
+                      return <View key={keyIndex} style={{ width: scale(60), height: scale(50) }} />;
+                    }
+                    return (
+                      <TouchableOpacity
+                        key={keyIndex}
+                        onPress={() => {
+                          if (key === 'del') {
+                            setVerifyPin(verifyPin.slice(0, -1));
+                          } else if (verifyPin.length < 6) {
+                            const newPin = verifyPin + key;
+                            setVerifyPin(newPin);
+                            if (newPin.length === 6) {
+                              handleVerifyPinSubmit(newPin);
+                            }
+                          }
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        }}
+                        style={{
+                          width: scale(60),
+                          height: scale(50),
+                          borderRadius: scale(12),
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}
+                      >
+                        {key === 'del' ? (
+                          <Ionicons name="backspace-outline" size={scale(22)} color={themeColors.text} />
+                        ) : (
+                          <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(22), color: themeColors.text }}>
+                            {key}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              onPress={() => setShowPinVerifyModal(false)}
+              style={{ marginTop: scale(20), alignItems: 'center' }}
+            >
+              <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(15), color: themeColors.textMuted }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Biometric Info Modal */}
       <Modal
         visible={showBiometricInfoModal}
@@ -812,49 +963,161 @@ export default function SettingsScreen() {
         transparent={true}
         onRequestClose={() => setShowBiometricInfoModal(false)}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'center', alignItems: 'center', padding: scale(24) }}>
-          <View style={{ backgroundColor: themeColors.card, borderRadius: scale(20), padding: scale(24), width: '100%', maxWidth: scale(340) }}>
-            <View style={{ alignItems: 'center', marginBottom: scale(16) }}>
-              <View style={{ width: scale(64), height: scale(64), borderRadius: scale(32), backgroundColor: '#F59E0B20', justifyContent: 'center', alignItems: 'center', marginBottom: scale(12) }}>
-                <Ionicons name="finger-print" size={scale(32)} color="#F59E0B" />
-              </View>
-              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, textAlign: 'center' }}>
-                Biometrics Unavailable
-              </Text>
-            </View>
-            <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, textAlign: 'center', marginBottom: scale(16), lineHeight: fontScale(22) }}>
-              This could happen if:
-            </Text>
-            <View style={{ gap: scale(8), marginBottom: scale(20) }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
-                <Ionicons name="close-circle" size={scale(18)} color="#EF4444" />
-                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>No fingerprint or face enrolled</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
-                <Ionicons name="close-circle" size={scale(18)} color="#EF4444" />
-                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Device doesn't support biometrics</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
-                <Ionicons name="close-circle" size={scale(18)} color="#EF4444" />
-                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Permission not granted</Text>
-              </View>
-            </View>
-            <View style={{ backgroundColor: 'rgba(16, 185, 95, 0.1)', borderRadius: scale(12), padding: scale(14), marginBottom: scale(20), flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
-              <Ionicons name="bulb-outline" size={scale(20)} color="#10B95F" />
-              <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: '#10B95F', flex: 1 }}>
-                Use PIN Lock as an alternative
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => setShowBiometricInfoModal(false)}
-              style={{ backgroundColor: '#10B95F', borderRadius: scale(12), padding: scale(14), alignItems: 'center' }}
+        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'center', alignItems: 'center', padding: scale(16) }}>
+          <View style={{ 
+            width: '100%', 
+            maxWidth: scale(360),
+            overflow: 'hidden',
+          }}>
+            {/* Full Card with Neutral Background */}
+            <LinearGradient
+              colors={isDark ? ['#1A1A1A', '#242424', '#1A1A1A'] : ['#FFFFFF', '#FAFAFA', '#FFFFFF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ 
+                borderRadius: scale(28),
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              }}
             >
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: '#FFFFFF' }}>Got it</Text>
-            </TouchableOpacity>
+              {/* Close Button */}
+              <TouchableOpacity 
+                onPress={() => setShowBiometricInfoModal(false)}
+                style={{ position: 'absolute', top: scale(16), right: scale(16), zIndex: 10, width: scale(32), height: scale(32), borderRadius: scale(16), backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Ionicons name="close" size={scale(18)} color={isDark ? '#FFFFFF' : '#92400E'} />
+              </TouchableOpacity>
+
+              {/* Hero Section */}
+              <View style={{ alignItems: 'center', paddingTop: scale(36), paddingHorizontal: scale(24) }}>
+                {/* Icon Ring */}
+                <View style={{ position: 'relative', marginBottom: scale(20) }}>
+                  <LinearGradient
+                    colors={['#FBBF24', '#F59E0B', '#D97706']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ 
+                      width: scale(88), 
+                      height: scale(88), 
+                      borderRadius: scale(44),
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <View style={{ 
+                      width: scale(72), 
+                      height: scale(72), 
+                      borderRadius: scale(36),
+                      backgroundColor: isDark ? '#1A1A1A' : '#FFFFFF',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                      <Ionicons name="finger-print" size={scale(34)} color="#F59E0B" />
+                    </View>
+                  </LinearGradient>
+                  {/* Decorative dots */}
+                  <View style={{ position: 'absolute', top: -scale(4), right: -scale(4), width: scale(12), height: scale(12), borderRadius: scale(6), backgroundColor: '#FBBF24' }} />
+                  <View style={{ position: 'absolute', bottom: -scale(2), left: -scale(6), width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: '#D97706' }} />
+                </View>
+
+                <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? '#FFFFFF' : '#1F1A0F', textAlign: 'center', letterSpacing: -0.5 }}>
+                  Biometrics Unavailable
+                </Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: isDark ? 'rgba(255,255,255,0.6)' : '#6B7280', textAlign: 'center', marginTop: scale(8), lineHeight: fontScale(22) }}>
+                  Face ID or fingerprint cannot{'\n'}be used on this device
+                </Text>
+              </View>
+
+              {/* Reasons Section */}
+              <View style={{ paddingHorizontal: scale(20), paddingTop: scale(28), paddingBottom: scale(24) }}>
+                {/* Reason Pills */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: scale(10), marginBottom: scale(24) }}>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: isDark ? 'rgba(220, 38, 38, 0.25)' : '#FEE2E2',
+                    paddingVertical: scale(10),
+                    paddingHorizontal: scale(14),
+                    borderRadius: scale(20),
+                    gap: scale(8),
+                  }}>
+                    <Ionicons name="person-outline" size={scale(16)} color="#DC2626" />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: isDark ? '#F87171' : '#DC2626' }}>Not Enrolled</Text>
+                  </View>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: isDark ? 'rgba(220, 38, 38, 0.25)' : '#FEE2E2',
+                    paddingVertical: scale(10),
+                    paddingHorizontal: scale(14),
+                    borderRadius: scale(20),
+                    gap: scale(8),
+                  }}>
+                    <Ionicons name="phone-portrait-outline" size={scale(16)} color="#DC2626" />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: isDark ? '#F87171' : '#DC2626' }}>Unsupported</Text>
+                  </View>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: isDark ? 'rgba(220, 38, 38, 0.25)' : '#FEE2E2',
+                    paddingVertical: scale(10),
+                    paddingHorizontal: scale(14),
+                    borderRadius: scale(20),
+                    gap: scale(8),
+                  }}>
+                    <Ionicons name="key-outline" size={scale(16)} color="#DC2626" />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: isDark ? '#F87171' : '#DC2626' }}>No Permission</Text>
+                  </View>
+                </View>
+
+                {/* Tip Box */}
+                <View style={{ 
+                  backgroundColor: isDark ? 'rgba(34, 197, 94, 0.2)' : '#DCFCE7',
+                  borderRadius: scale(16),
+                  padding: scale(16),
+                  marginBottom: scale(24),
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(34, 197, 94, 0.4)' : 'rgba(34, 197, 94, 0.3)',
+                }}>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: isDark ? '#4ADE80' : '#16A34A', marginBottom: scale(8), textTransform: 'uppercase', letterSpacing: 1 }}>Alternative</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+                    <View style={{ width: scale(40), height: scale(40), borderRadius: scale(12), backgroundColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)', justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons name="keypad" size={scale(20)} color="#22C55E" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(15), color: themeColors.text }}>Use PIN Lock</Text>
+                      <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(12), color: themeColors.textMuted }}>Set up a 6-digit PIN instead</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* CTA Button */}
+                <TouchableOpacity
+                  onPress={() => setShowBiometricInfoModal(false)}
+                  activeOpacity={0.9}
+                  style={{ overflow: 'hidden', borderRadius: scale(16) }}
+                >
+                  <LinearGradient
+                    colors={['#F59E0B', '#D97706', '#B45309']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ 
+                      paddingVertical: scale(18), 
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      gap: scale(8),
+                    }}
+                  >
+                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: '#FFFFFF' }}>Got it</Text>
+                    <Ionicons name="checkmark-circle" size={scale(20)} color="#FFFFFF" />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
           </View>
         </View>
       </Modal>
-
       {/* Privacy Mode Info Modal */}
       <Modal
         visible={showPrivacyInfoModal}
@@ -862,39 +1125,159 @@ export default function SettingsScreen() {
         transparent={true}
         onRequestClose={() => setShowPrivacyInfoModal(false)}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'center', alignItems: 'center', padding: scale(24) }}>
-          <View style={{ backgroundColor: themeColors.card, borderRadius: scale(20), padding: scale(24), width: '100%', maxWidth: scale(340) }}>
-            <View style={{ alignItems: 'center', marginBottom: scale(16) }}>
-              <View style={{ width: scale(64), height: scale(64), borderRadius: scale(32), backgroundColor: '#8B5CF620', justifyContent: 'center', alignItems: 'center', marginBottom: scale(12) }}>
-                <Ionicons name="eye-off" size={scale(32)} color="#8B5CF6" />
-              </View>
-              <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(20), color: themeColors.text, textAlign: 'center' }}>
-                Privacy Mode
-              </Text>
-            </View>
-            <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.textMuted, textAlign: 'center', marginBottom: scale(16), lineHeight: fontScale(22) }}>
-              Hide your financial data from prying eyes!
-            </Text>
-            <View style={{ gap: scale(12), marginBottom: scale(20) }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: scale(10) }}>
-                <Ionicons name="checkmark-circle" size={scale(20)} color="#10B95F" />
-                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>All P&L amounts are hidden and shown as "••••"</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: scale(10) }}>
-                <Ionicons name="checkmark-circle" size={scale(20)} color="#10B95F" />
-                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Perfect for using the app in public</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: scale(10) }}>
-                <Ionicons name="checkmark-circle" size={scale(20)} color="#10B95F" />
-                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(14), color: themeColors.text, flex: 1 }}>Tap the toggle to show/hide anytime</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => setShowPrivacyInfoModal(false)}
-              style={{ backgroundColor: '#8B5CF6', borderRadius: scale(12), padding: scale(14), alignItems: 'center' }}
+        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'center', alignItems: 'center', padding: scale(16) }}>
+          <View style={{ 
+            width: '100%', 
+            maxWidth: scale(360),
+            overflow: 'hidden',
+          }}>
+            {/* Full Card with Gradient Background */}
+            <LinearGradient
+              colors={isDark ? ['#1C1033', '#2A1853', '#1C1033'] : ['#F5F3FF', '#EDE9FE', '#F5F3FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ 
+                borderRadius: scale(28),
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)',
+              }}
             >
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: fontScale(16), color: '#FFFFFF' }}>Got it</Text>
-            </TouchableOpacity>
+              {/* Close Button */}
+              <TouchableOpacity 
+                onPress={() => setShowPrivacyInfoModal(false)}
+                style={{ position: 'absolute', top: scale(16), right: scale(16), zIndex: 10, width: scale(32), height: scale(32), borderRadius: scale(16), backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Ionicons name="close" size={scale(18)} color={isDark ? '#FFFFFF' : '#6D28D9'} />
+              </TouchableOpacity>
+
+              {/* Hero Section */}
+              <View style={{ alignItems: 'center', paddingTop: scale(36), paddingHorizontal: scale(24) }}>
+                {/* Animated Icon Ring */}
+                <View style={{ position: 'relative', marginBottom: scale(20) }}>
+                  <LinearGradient
+                    colors={['#A78BFA', '#8B5CF6', '#7C3AED']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ 
+                      width: scale(88), 
+                      height: scale(88), 
+                      borderRadius: scale(44),
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <View style={{ 
+                      width: scale(72), 
+                      height: scale(72), 
+                      borderRadius: scale(36),
+                      backgroundColor: isDark ? '#1C1033' : '#F5F3FF',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                      <Ionicons name="eye-off" size={scale(34)} color="#8B5CF6" />
+                    </View>
+                  </LinearGradient>
+                  {/* Decorative dots */}
+                  <View style={{ position: 'absolute', top: -scale(4), right: -scale(4), width: scale(12), height: scale(12), borderRadius: scale(6), backgroundColor: '#A78BFA' }} />
+                  <View style={{ position: 'absolute', bottom: -scale(2), left: -scale(6), width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: '#7C3AED' }} />
+                </View>
+
+                <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(26), color: isDark ? '#FFFFFF' : '#1F1149', textAlign: 'center', letterSpacing: -0.5 }}>
+                  Your Eyes Only
+                </Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(15), color: isDark ? 'rgba(255,255,255,0.6)' : '#6B7280', textAlign: 'center', marginTop: scale(8), lineHeight: fontScale(22) }}>
+                  Keep your profits private when{'\n'}using the app around others
+                </Text>
+              </View>
+
+              {/* Features Section */}
+              <View style={{ paddingHorizontal: scale(20), paddingTop: scale(28), paddingBottom: scale(24) }}>
+                {/* Feature Pills in Row */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: scale(10), marginBottom: scale(28) }}>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)',
+                    paddingVertical: scale(10),
+                    paddingHorizontal: scale(14),
+                    borderRadius: scale(20),
+                    gap: scale(8),
+                  }}>
+                    <Ionicons name="lock-closed" size={scale(16)} color="#8B5CF6" />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: isDark ? '#E9D5FF' : '#6D28D9' }}>Hidden Values</Text>
+                  </View>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)',
+                    paddingVertical: scale(10),
+                    paddingHorizontal: scale(14),
+                    borderRadius: scale(20),
+                    gap: scale(8),
+                  }}>
+                    <Ionicons name="shield-checkmark" size={scale(16)} color="#8B5CF6" />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: isDark ? '#E9D5FF' : '#6D28D9' }}>Safe in Public</Text>
+                  </View>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)',
+                    paddingVertical: scale(10),
+                    paddingHorizontal: scale(14),
+                    borderRadius: scale(20),
+                    gap: scale(8),
+                  }}>
+                    <Ionicons name="flash" size={scale(16)} color="#8B5CF6" />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(13), color: isDark ? '#E9D5FF' : '#6D28D9' }}>Instant Toggle</Text>
+                  </View>
+                </View>
+
+                {/* Preview Box */}
+                <View style={{ 
+                  backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)',
+                  borderRadius: scale(16),
+                  padding: scale(16),
+                  marginBottom: scale(24),
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.15)',
+                }}>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: fontScale(12), color: themeColors.textMuted, marginBottom: scale(10), textTransform: 'uppercase', letterSpacing: 1 }}>Preview</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View>
+                      <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: themeColors.textMuted }}>Total P&L</Text>
+                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(22), color: '#10B95F', marginTop: scale(2) }}>••••••</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ fontFamily: fonts.regular, fontSize: fontScale(13), color: themeColors.textMuted }}>This Month</Text>
+                      <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(22), color: '#10B95F', marginTop: scale(2) }}>••••</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* CTA Button */}
+                <TouchableOpacity
+                  onPress={() => setShowPrivacyInfoModal(false)}
+                  activeOpacity={0.9}
+                  style={{ overflow: 'hidden', borderRadius: scale(16) }}
+                >
+                  <LinearGradient
+                    colors={['#8B5CF6', '#7C3AED', '#6D28D9']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ 
+                      paddingVertical: scale(18), 
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      gap: scale(8),
+                    }}
+                  >
+                    <Text style={{ fontFamily: fonts.bold, fontSize: fontScale(16), color: '#FFFFFF' }}>Got it</Text>
+                    <Ionicons name="checkmark-circle" size={scale(20)} color="#FFFFFF" />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
           </View>
         </View>
       </Modal>
