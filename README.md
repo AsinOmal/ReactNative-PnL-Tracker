@@ -1,4 +1,5 @@
 <div align="center">
+<img width="1920" height="1080" alt="1  Hero" src="https://github.com/user-attachments/assets/0f04a39d-75b2-4bb1-a337-b81d11319d1d" />
 
 # TradeX · P&L Tracker
 
